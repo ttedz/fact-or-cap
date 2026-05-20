@@ -404,7 +404,7 @@ async function goToLobby(roomId) {
   document.getElementById("lobbyRoomId").textContent = roomId;
   document.getElementById("lobbyInviteCode").textContent = "Confirming on blockchain...";
   // Wait 5 seconds for GenLayer to finalize the transaction
-  await new Promise(r => setTimeout(r, 5000));
+  await new Promise(r => setTimeout(r, 15000));
   pollInterval = setInterval(() => pollLobby(roomId), 3000);
   pollLobby(roomId);
 }
