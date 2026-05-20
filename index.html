@@ -251,7 +251,7 @@ async function glRead(method, args = []) {
     body: JSON.stringify({
       jsonrpc: "2.0",
       method: "gen_call",
-      params: [{ to: CONTRACT_ADDRESS, data: { function: method, args: args } }, "latest"],
+      params: [{ to: CONTRACT_ADDRESS, data: { function: method, args: args } }],
       id: 1
     })
   });
