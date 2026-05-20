@@ -198,9 +198,7 @@
 </div>
 
 <div class="screen" id="gameScreen">
-  <div class="container">
-    <div id="gameContent"></div>
-  </div>
+  <div class="container"><div id="gameContent"></div></div>
 </div>
 
 <div class="screen" id="resultsScreen">
@@ -228,44 +226,30 @@ const ABI = [
   "function start_game(string room_id, string caller) returns (string)",
   "function submit_claim(string room_id, string player, string claim) returns (string)",
   "function vote(string room_id, string player, bool is_fact) returns (string)",
-  "function resolve_round(string room_id) returns (string)",
-  "function get_room(string room_id) view returns (string)",
-  "function get_player_xp(string player) view returns (string)",
-  "function get_leaderboard() view returns (string)",
-  "function get_room_count() view returns (string)"
+  "function resolve_round(string room_id) returns (string)"
 ];
 
 let provider, signer, contract, walletAddress;
-let currentRoom = null;
-let currentRoomId = null;
-let pollInterval = null;
-let timerInterval = null;
-let timerSeconds = 30;
+let currentRoom = null, currentRoomId = null;
+let pollInterval = null, timerInterval = null, timerSeconds = 30;
 let username = localStorage.getItem("foc_username") || "";
+let glClient = null;
 
-// ─── GENLAYER READ ────────────────────────────────────────────────────────────
+// ─── GENLAYER READ via genlayer-js ───────────────────────────────────────────
 async function glRead(method, args = []) {
-  const res = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      method: "gen_call",
-      params: [{ to: CONTRACT_ADDRESS, data: { function: method, args: args } }],
-      id: 1
-    })
+  if (!glClient) throw new Error("genlayer-js not ready");
+  const result = await glClient.readContract({
+    address: CONTRACT_ADDRESS,
+    functionName: method,
+    args: args,
   });
-  const data = await res.json();
-  if (data.error) throw new Error(JSON.stringify(data.error));
-  return data.result;
+  return result;
 }
 
 // ─── WALLET ───────────────────────────────────────────────────────────────────
 async function connectWallet() {
   let eth = window.ethereum;
-  if (window.ethereum?.providers) {
-    eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
-  }
+  if (window.ethereum?.providers) eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
   if (!eth) return showToast("Install MetaMask first", "error");
   try {
     provider = new ethers.BrowserProvider(eth);
@@ -319,7 +303,7 @@ function showScreen(id) {
 async function loadLeaderboard() {
   const el = document.getElementById("leaderboardList");
   try {
-    const raw = await glRead("get_leaderboard");
+    const raw = await glRead("get_leaderboard", []);
     const entries = JSON.parse(raw);
     if (!entries.length) { el.innerHTML = '<div class="status-msg">No players yet — be the first!</div>'; return; }
     const medals = ["🥇","🥈","🥉"];
@@ -329,7 +313,7 @@ async function loadLeaderboard() {
         <div class="lb-player">${getDisplayName(e.player)}</div>
         <div class="lb-xp">${e.xp} XP</div>
       </div>`).join("");
-  } catch(e) { el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>'; console.error(e); }
+  } catch(e) { el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>'; console.error("LB error:", e); }
 }
 
 // ─── CREATE ROOM ──────────────────────────────────────────────────────────────
@@ -430,20 +414,17 @@ function renderGame(room) {
   const isClaimer = isMe(rnd.claimer);
   const hasVoted = rnd.votes && walletAddress && rnd.votes[walletAddress] !== undefined;
   const el = document.getElementById("gameContent");
-
   if (rnd.is_resolved) {
-    const v = rnd.verdict;
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Verdict</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      <div class="verdict-box ${v ? 'true' : 'false'}">
-        <div class="verdict-label">${v ? "✅ FACT" : "❌ CAP"}</div>
+      <div class="verdict-box ${rnd.verdict ? 'true' : 'false'}">
+        <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
       </div>
       <div class="status-msg pulse">Next round starting...</div>`;
     return;
   }
-
   if (!rnd.claim_submitted) {
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Claiming Phase</div>
@@ -453,12 +434,9 @@ function renderGame(room) {
           <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px" />
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
-      ` : `
-        <div class="status-msg pulse">⏳ Waiting for ${getDisplayName(rnd.claimer)} to submit a claim...</div>
-      `}`;
+      ` : `<div class="status-msg pulse">⏳ Waiting for ${getDisplayName(rnd.claimer)} to submit a claim...</div>`}`;
     return;
   }
-
   if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
     el.innerHTML = `
@@ -473,9 +451,7 @@ function renderGame(room) {
         <div class="vote-btns">
           <button class="vote-btn fact" onclick="castVote('${room.id}', true)">✅<br>FACT</button>
           <button class="vote-btn cap" onclick="castVote('${room.id}', false)">❌<br>CAP</button>
-        </div>
-      `}`;
-    return;
+        </div>`}`;
   }
 }
 
@@ -520,14 +496,11 @@ async function resolveRound(roomId) {
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
-// ─── RESULTS ─────────────────────────────────────────────────────────────────
 async function showResults(room) {
   showScreen("resultsScreen");
   const xpMap = {};
   try {
-    for (const p of room.players) {
-      xpMap[p] = await glRead("get_player_xp", [p]);
-    }
+    for (const p of room.players) xpMap[p] = await glRead("get_player_xp", [p]);
   } catch(e) { console.error(e); }
   document.getElementById("finalXpList").innerHTML = room.players.map(p => `
     <div class="xp-row">
@@ -536,8 +509,7 @@ async function showResults(room) {
     </div>`).join("");
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function shortAddr(addr) { return addr ? addr.slice(0,6) + "..." + addr.slice(-4) : ""; }
+function shortAddr(addr) { return addr ? addr.slice(0,6)+"..."+addr.slice(-4) : ""; }
 function getDisplayName(addr) {
   if (!addr) return "Unknown";
   if (addr.toLowerCase() === walletAddress?.toLowerCase() && username) return username;
@@ -546,12 +518,28 @@ function getDisplayName(addr) {
 function showToast(msg, type="") {
   const t = document.getElementById("toast");
   t.textContent = msg;
-  t.className = "toast show" + (type ? " "+type : "");
+  t.className = "toast show" + (type?" "+type:"");
   setTimeout(() => t.className = "toast", 3000);
 }
 
 updateUsernameDisplay();
-loadLeaderboard();
 </script>
+
+<!-- Load genlayer-js as ES module for contract reads -->
+<script type="module">
+import { createClient, createAccount } from 'https://esm.sh/genlayer-js@latest';
+import { studionet } from 'https://esm.sh/genlayer-js@latest/chains';
+
+try {
+  const account = createAccount();
+  window.glClient = createClient({ chain: studionet, account });
+  console.log("genlayer-js loaded successfully");
+  loadLeaderboard();
+} catch(e) {
+  console.error("Failed to load genlayer-js:", e);
+  document.getElementById("leaderboardList").innerHTML = '<div class="status-msg">Could not load leaderboard</div>';
+}
+</script>
+
 </body>
 </html>
