@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fact or Cap</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -19,11 +18,11 @@
     .nav-right { display: flex; align-items: center; gap: 12px; }
     .btn { padding: 10px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-primary:hover { background: var(--accent2); }
     .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
     .btn-lg { padding: 14px 32px; font-size: 16px; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .disclaimer { background: #1a1a0a; border-bottom: 1px solid #3a3a00; padding: 8px 32px; font-size: 12px; color: var(--yellow); text-align: center; }
     .screen { display: none; }
     .screen.active { display: block; }
@@ -42,23 +41,21 @@
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
     .form-group input, .form-group select { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
     .player-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
     .player-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 14px; }
     .player-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
     .invite-box { background: var(--surface2); border: 1px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0; }
-    .invite-code { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: var(--accent2); }
+    .invite-code { font-size: 26px; font-weight: 900; letter-spacing: 3px; color: var(--accent2); }
     .round-badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 16px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
     .claim-box { background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius); padding: 32px; text-align: center; margin: 24px 0; }
     .claim-text { font-size: 22px; font-weight: 700; line-height: 1.4; }
     .vote-btns { display: flex; gap: 16px; justify-content: center; margin: 24px 0; }
-    .vote-btn { flex: 1; max-width: 200px; padding: 20px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 20px; font-weight: 800; transition: all 0.2s; background: var(--surface2); color: var(--text); }
+    .vote-btn { flex: 1; max-width: 200px; padding: 20px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 20px; font-weight: 800; background: var(--surface2); color: var(--text); transition: all 0.2s; }
     .vote-btn.fact { border-color: var(--green); }
     .vote-btn.fact:hover { background: var(--green); color: white; }
     .vote-btn.cap { border-color: var(--red); }
     .vote-btn.cap:hover { background: var(--red); color: white; }
-    .timer-ring { display: flex; align-items: center; justify-content: center; margin: 16px auto; }
-    .timer-num { font-size: 48px; font-weight: 900; color: var(--accent2); }
+    .timer-num { font-size: 48px; font-weight: 900; color: var(--accent2); text-align: center; margin: 16px 0; }
     .timer-num.urgent { color: var(--red); }
     .verdict-box { text-align: center; padding: 40px; border-radius: var(--radius); margin: 24px 0; }
     .verdict-box.true { background: #0a2a0a; border: 2px solid var(--green); }
@@ -86,10 +83,10 @@
 
 <div class="modal-overlay" id="usernameModal">
   <div class="modal">
-    <h3>Set Your Username</h3>
+    <h3>Choose a username</h3>
     <div class="form-group">
-      <label>Choose a display name</label>
-      <input type="text" id="usernameInput" placeholder="e.g. CryptoSherlock" maxlength="20" />
+      <label>Display name shown to other players</label>
+      <input type="text" id="usernameInput" placeholder="e.g. FactMaster99" maxlength="20" />
     </div>
     <button class="btn btn-primary" style="width:100%" onclick="saveUsername()">Save & Play</button>
   </div>
@@ -105,9 +102,7 @@
   </div>
 </nav>
 
-<div class="disclaimer">
-  ⚠️ Testnet demo — Use a burner wallet only. Runs on GenLayer Studionet.
-</div>
+<div class="disclaimer">⚠️ Testnet demo — Use a burner wallet. Runs on GenLayer Studionet.</div>
 
 <div class="screen active" id="homeScreen">
   <div class="hero">
@@ -130,18 +125,18 @@
     <div class="card">
       <h2 style="margin-bottom:24px">Create a Room</h2>
       <div class="form-group">
-        <label>Room ID — share this with friends</label>
-        <input type="text" id="createRoomId" placeholder="e.g. funroom1" />
+        <label>Room ID — friends need this to join</label>
+        <input type="text" id="createRoomId" placeholder="e.g. pizza42" />
       </div>
       <div class="form-group">
         <label>Room Type</label>
         <select id="createPrivate">
-          <option value="false">Public — Anyone can join</option>
-          <option value="true">Private — Invite code required</option>
+          <option value="false">Public — anyone can join</option>
+          <option value="true">Private — invite code required</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Max Players (2–6)</label>
+        <label>Max Players</label>
         <select id="createMaxPlayers">
           <option value="2">2 players</option>
           <option value="3">3 players</option>
@@ -150,11 +145,11 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Rounds (3–7)</label>
+        <label>Rounds</label>
         <select id="createRounds">
-          <option value="3">3 rounds (~10 min)</option>
-          <option value="5">5 rounds (~15 min)</option>
-          <option value="7">7 rounds (~20 min)</option>
+          <option value="3">3 rounds</option>
+          <option value="5">5 rounds</option>
+          <option value="7">7 rounds</option>
         </select>
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="createRoom()">Create Room</button>
@@ -169,10 +164,10 @@
       <h2 style="margin-bottom:24px">Join a Room</h2>
       <div class="form-group">
         <label>Room ID</label>
-        <input type="text" id="joinRoomId" placeholder="Ask the host for Room ID" />
+        <input type="text" id="joinRoomId" placeholder="Ask the host for the Room ID" />
       </div>
       <div class="form-group">
-        <label>Invite Code (only for private rooms)</label>
+        <label>Invite Code (private rooms only)</label>
         <input type="text" id="joinInviteCode" placeholder="Leave empty for public rooms" />
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="joinRoom()">Join Room</button>
@@ -183,13 +178,13 @@
 <div class="screen" id="lobbyScreen">
   <div class="container">
     <div class="card">
-      <h2 style="margin-bottom:8px">Lobby</h2>
-      <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Share these details with friends</p>
+      <h2 style="margin-bottom:8px">Lobby 🎮</h2>
+      <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Share these details with your friends</p>
       <div class="invite-box">
-        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Room ID</div>
-        <div style="font-size:22px;font-weight:800;color:var(--text)" id="lobbyRoomId"></div>
-        <div style="font-size:13px;color:var(--muted);margin:12px 0 4px">Invite Code</div>
-        <div class="invite-code" id="lobbyInviteCode"></div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">ROOM ID</div>
+        <div style="font-size:24px;font-weight:800" id="lobbyRoomId"></div>
+        <div style="font-size:13px;color:var(--muted);margin:12px 0 4px">INVITE CODE</div>
+        <div class="invite-code" id="lobbyInviteCode">...</div>
       </div>
       <div class="player-list" id="lobbyPlayers"></div>
       <div id="lobbyStartBtn" style="margin-top:16px"></div>
@@ -215,64 +210,87 @@
   </div>
 </div>
 
+<script type="module">
+// Load genlayer-js for reads
+import { createClient } from 'https://esm.sh/genlayer-js@1.1.7';
+import { studionet } from 'https://esm.sh/genlayer-js@1.1.7/chains';
+
+try {
+  window._gl = createClient({ chain: studionet });
+  console.log('genlayer-js read client ready');
+  // If wallet already connected, reload leaderboard
+  if (window.walletAddress) window.loadLeaderboard();
+} catch(e) {
+  console.error('genlayer-js failed to load:', e);
+  window._gl = null;
+}
+</script>
+
 <script>
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
-const CONTRACT_ADDRESS = "0xD38869ccBFBb0dfa10Dc30289ffC0E2CAd87CBf6";
-const CHAIN_ID = 61999;
-const CHAIN_ID_HEX = "0xF22F";
-const STUDIONET = {
-  chainId: CHAIN_ID_HEX,
-  chainName: "GenLayer Studionet",
-  nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
-  rpcUrls: ["https://studio.genlayer.com/api"],
-  blockExplorerUrls: ["https://explorer-studio.genlayer.com"]
-};
+const CONTRACT = "0xD38869ccBFBb0dfa10Dc30289ffC0E2CAd87CBf6";
 
-const WRITE_ABI = [
-  "function create_room(string,string,bool,uint256,uint256) returns (string)",
-  "function join_room(string,string,string) returns (string)",
-  "function start_game(string,string) returns (string)",
-  "function submit_claim(string,string,string) returns (string)",
-  "function vote(string,string,bool) returns (string)",
-  "function resolve_round(string) returns (string)"
-];
-
-const READ_ABI = [
-  "function get_room(string) view returns (string)",
-  "function get_player_xp(string) view returns (string)",
-  "function get_leaderboard() view returns (string)",
-  "function get_room_count() view returns (string)"
-];
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let provider, signer, writeContract, readContract, walletAddress;
-let pollInterval = null, timerInterval = null, timerSeconds = 30;
+// ─── State ───────────────────────────────────────────────────────────────────
+let walletAddress = null;
+let writeClient = null; // ethers signer contract
+let pollInterval = null;
+let timerInterval = null;
+let timerSeconds = 30;
 let username = localStorage.getItem("foc_username") || "";
 
-// ─── NETWORK ──────────────────────────────────────────────────────────────────
-async function switchToStudionet(eth) {
-  try {
-    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_ID_HEX }] });
-  } catch(e) {
-    if (e.code === 4902 || e.code === -32603) {
-      await eth.request({ method: "wallet_addEthereumChain", params: [STUDIONET] });
-    }
+// ─── Read via genlayer-js ────────────────────────────────────────────────────
+async function glRead(method, args = []) {
+  // Wait up to 8 seconds for genlayer-js to load
+  for (let i = 0; i < 80; i++) {
+    if (window._gl !== undefined) break;
+    await new Promise(r => setTimeout(r, 100));
   }
+  if (!window._gl) throw new Error("genlayer-js unavailable");
+  return await window._gl.readContract({
+    address: CONTRACT,
+    functionName: method,
+    args: args,
+    stateStatus: "accepted",
+  });
 }
 
-// ─── WALLET ───────────────────────────────────────────────────────────────────
+// ─── Wallet ──────────────────────────────────────────────────────────────────
 async function connectWallet() {
   let eth = window.ethereum;
   if (window.ethereum?.providers) eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
-  if (!eth) return showToast("Install MetaMask first", "error");
+  if (!eth) return showToast("Please install MetaMask", "error");
   try {
     await eth.request({ method: "eth_requestAccounts" });
-    await switchToStudionet(eth);
-    provider = new ethers.BrowserProvider(eth);
-    signer = await provider.getSigner();
-    walletAddress = await signer.getAddress();
-    writeContract = new ethers.Contract(CONTRACT_ADDRESS, WRITE_ABI, signer);
-    readContract = new ethers.Contract(CONTRACT_ADDRESS, READ_ABI, provider);
+    // Switch to GenLayer Studionet
+    try {
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xF22F" }] });
+    } catch(se) {
+      if (se.code === 4902 || se.code === -32603) {
+        await eth.request({ method: "wallet_addEthereumChain", params: [{
+          chainId: "0xF22F",
+          chainName: "GenLayer Studionet",
+          nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+          rpcUrls: ["https://studio.genlayer.com/api"],
+          blockExplorerUrls: ["https://explorer-studio.genlayer.com"]
+        }]});
+      }
+    }
+    const accounts = await eth.request({ method: "eth_accounts" });
+    walletAddress = accounts[0];
+
+    // Setup write contract via ethers
+    const { ethers } = await import('https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js');
+    const provider = new ethers.BrowserProvider(eth);
+    const signer = await provider.getSigner();
+    const ABI = [
+      "function create_room(string,string,bool,uint256,uint256) returns (string)",
+      "function join_room(string,string,string) returns (string)",
+      "function start_game(string,string) returns (string)",
+      "function submit_claim(string,string,string) returns (string)",
+      "function vote(string,string,bool) returns (string)",
+      "function resolve_round(string) returns (string)"
+    ];
+    writeClient = new ethers.Contract(CONTRACT, ABI, signer);
+
     const btn = document.getElementById("walletBtn");
     btn.textContent = shortAddr(walletAddress);
     btn.onclick = disconnectWallet;
@@ -281,13 +299,14 @@ async function connectWallet() {
     loadLeaderboard();
     showToast("Connected to GenLayer Studionet ✅", "success");
   } catch(e) {
-    showToast("Connection failed: " + (e.message || "Unknown error"), "error");
+    showToast("Failed to connect: " + (e.message||"error"), "error");
     console.error(e);
   }
 }
 
 function disconnectWallet() {
-  provider = signer = writeContract = readContract = walletAddress = null;
+  walletAddress = null;
+  writeClient = null;
   const btn = document.getElementById("walletBtn");
   btn.textContent = "Connect Wallet";
   btn.onclick = connectWallet;
@@ -302,14 +321,14 @@ function requireWallet(screen) {
   showScreen(screen);
 }
 
-// ─── USERNAME ─────────────────────────────────────────────────────────────────
+// ─── Username ────────────────────────────────────────────────────────────────
 function showUsernameModal() {
   document.getElementById("usernameInput").value = username || "";
   document.getElementById("usernameModal").classList.add("active");
 }
 function saveUsername() {
   const val = document.getElementById("usernameInput").value.trim();
-  if (!val) return showToast("Please enter a username", "error");
+  if (!val) return showToast("Enter a username", "error");
   username = val;
   localStorage.setItem("foc_username", username);
   document.getElementById("usernameModal").classList.remove("active");
@@ -317,11 +336,10 @@ function saveUsername() {
   showToast("Username set: " + username, "success");
 }
 function updateUsernameDisplay() {
-  const el = document.getElementById("usernameDisplay");
-  el.textContent = username && walletAddress ? "👤 " + username : "";
+  document.getElementById("usernameDisplay").textContent = username && walletAddress ? "👤 " + username : "";
 }
 
-// ─── SCREENS ──────────────────────────────────────────────────────────────────
+// ─── Screens ─────────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -329,72 +347,65 @@ function showScreen(id) {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 }
 
-// ─── READ CONTRACT ────────────────────────────────────────────────────────────
-async function glRead(method, args = []) {
-  if (!readContract) throw new Error("Not connected");
-  return await readContract[method](...args);
-}
-
-// ─── LEADERBOARD ──────────────────────────────────────────────────────────────
+// ─── Leaderboard ─────────────────────────────────────────────────────────────
 async function loadLeaderboard() {
   const el = document.getElementById("leaderboardList");
-  if (!readContract) return;
   el.innerHTML = '<div class="status-msg pulse">Loading...</div>';
   try {
-    const raw = await glRead("get_leaderboard");
+    const raw = await glRead("get_leaderboard", []);
     const entries = JSON.parse(raw);
-    if (!entries.length) { el.innerHTML = '<div class="status-msg">No players yet — be the first!</div>'; return; }
+    if (!entries.length) { el.innerHTML = '<div class="status-msg">No players yet — be first!</div>'; return; }
     const medals = ["🥇","🥈","🥉"];
     el.innerHTML = entries.map((e,i) => `
       <div class="lb-row">
-        <div class="lb-rank">${medals[i] || "#"+(i+1)}</div>
+        <div class="lb-rank">${medals[i]||"#"+(i+1)}</div>
         <div class="lb-player">${shortAddr(e.player)}</div>
         <div class="lb-xp">${e.xp} XP</div>
       </div>`).join("");
   } catch(e) {
     el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>';
-    console.error("Leaderboard error:", e);
+    console.error("LB:", e);
   }
 }
+window.loadLeaderboard = loadLeaderboard;
 
-// ─── CREATE ROOM ──────────────────────────────────────────────────────────────
+// ─── Create Room ──────────────────────────────────────────────────────────────
 async function createRoom() {
   const roomId = document.getElementById("createRoomId").value.trim();
   if (!roomId) return showToast("Enter a room ID", "error");
-  if (roomId.length > 20) return showToast("Room ID too long (max 20 chars)", "error");
   const isPrivate = document.getElementById("createPrivate").value === "true";
   const maxPlayers = parseInt(document.getElementById("createMaxPlayers").value);
   const rounds = parseInt(document.getElementById("createRounds").value);
   try {
-    showToast("Creating room on GenLayer...");
-    const tx = await writeContract.create_room(roomId, walletAddress, isPrivate, maxPlayers, rounds);
+    showToast("Creating room...");
+    const tx = await writeClient.create_room(roomId, walletAddress, isPrivate, maxPlayers, rounds);
     await tx.wait();
     showToast("Room created!", "success");
-    goToLobby(roomId, isPrivate);
-  } catch(e) { showToast("Failed: " + (e.reason || e.message || "Error"), "error"); console.error(e); }
+    goToLobby(roomId);
+  } catch(e) { showToast("Error: " + (e.reason||e.message||"failed"), "error"); console.error(e); }
 }
 
-// ─── JOIN ROOM ────────────────────────────────────────────────────────────────
+// ─── Join Room ────────────────────────────────────────────────────────────────
 async function joinRoom() {
   const roomId = document.getElementById("joinRoomId").value.trim();
-  const inviteCode = document.getElementById("joinInviteCode").value.trim();
+  const code = document.getElementById("joinInviteCode").value.trim();
   if (!roomId) return showToast("Enter a room ID", "error");
   try {
     showToast("Joining room...");
-    const tx = await writeContract.join_room(roomId, walletAddress, inviteCode);
+    const tx = await writeClient.join_room(roomId, walletAddress, code);
     await tx.wait();
     showToast("Joined!", "success");
-    goToLobby(roomId, false);
-  } catch(e) { showToast("Failed: " + (e.reason || e.message || "Error"), "error"); console.error(e); }
+    goToLobby(roomId);
+  } catch(e) { showToast("Error: " + (e.reason||e.message||"failed"), "error"); console.error(e); }
 }
 
-// ─── LOBBY ────────────────────────────────────────────────────────────────────
-async function goToLobby(roomId, isPrivate) {
+// ─── Lobby ────────────────────────────────────────────────────────────────────
+async function goToLobby(roomId) {
   showScreen("lobbyScreen");
   document.getElementById("lobbyRoomId").textContent = roomId;
-  document.getElementById("lobbyInviteCode").textContent = isPrivate ? "FOC" + roomId : "Public Room";
+  document.getElementById("lobbyInviteCode").textContent = "Loading...";
   pollInterval = setInterval(() => pollLobby(roomId), 3000);
-  await pollLobby(roomId);
+  pollLobby(roomId);
 }
 
 async function pollLobby(roomId) {
@@ -402,38 +413,37 @@ async function pollLobby(roomId) {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
     if (room.error) return;
-    // Update invite code from contract
-    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room";
+    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room (no code needed)";
     if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
     document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
       <div class="player-item">
         <div class="player-dot"></div>
-        <span>${p.toLowerCase() === walletAddress?.toLowerCase() ? (username || "You") : shortAddr(p)}</span>
-        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="color:var(--accent2);font-size:11px;margin-left:auto">You</span>' : ""}
+        <span>${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : shortAddr(p)}</span>
+        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="margin-left:auto;font-size:11px;color:var(--accent2)">You</span>' : ""}
       </div>`).join("");
-    const isHost = room.host.toLowerCase() === walletAddress?.toLowerCase();
+    const isHost = room.host?.toLowerCase() === walletAddress?.toLowerCase();
     const canStart = room.players.length >= 2;
     document.getElementById("lobbyStartBtn").innerHTML = isHost
       ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">
-          ${canStart ? "🚀 Start Game" : "Need at least 2 players..."}
+           ${canStart ? "🚀 Start Game!" : "Waiting for more players..."}
          </button>`
-      : `<div class="status-msg pulse">Waiting for host to start the game...</div>`;
-  } catch(e) { console.error("Lobby poll error:", e); }
+      : `<div class="status-msg pulse">Waiting for host to start...</div>`;
+  } catch(e) { console.error("Lobby poll:", e); }
 }
 
 async function startGame(roomId) {
   try {
-    showToast("Starting game...");
-    const tx = await writeContract.start_game(roomId, walletAddress);
+    showToast("Starting...");
+    const tx = await writeClient.start_game(roomId, walletAddress);
     await tx.wait();
   } catch(e) { showToast("Failed to start", "error"); console.error(e); }
 }
 
-// ─── GAME ─────────────────────────────────────────────────────────────────────
+// ─── Game ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
   showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
-  await pollGame(roomId);
+  pollGame(roomId);
 }
 
 async function pollGame(roomId) {
@@ -443,23 +453,22 @@ async function pollGame(roomId) {
     if (room.error) return;
     if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
     renderGame(room);
-  } catch(e) { console.error("Game poll error:", e); }
+  } catch(e) { console.error("Game poll:", e); }
 }
 
 function renderGame(room) {
   const rnd = room.rounds[room.current_round - 1];
   if (!rnd) return;
   const isClaimer = rnd.claimer?.toLowerCase() === walletAddress?.toLowerCase();
-  const hasVoted = walletAddress && rnd.votes?.[walletAddress] !== undefined;
+  const hasVoted = walletAddress && rnd.votes && rnd.votes[walletAddress] !== undefined;
   const el = document.getElementById("gameContent");
 
   if (rnd.is_resolved) {
-    const v = rnd.verdict;
     el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Verdict</div>
+      <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Verdict</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      <div class="verdict-box ${v?"true":"false"}">
-        <div class="verdict-label">${v ? "✅ FACT" : "❌ CAP"}</div>
+      <div class="verdict-box ${rnd.verdict?"true":"false"}">
+        <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
       </div>
       <div class="status-msg pulse">Next round coming up...</div>`;
@@ -468,11 +477,11 @@ function renderGame(room) {
 
   if (!rnd.claim_submitted) {
     el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Claiming Phase</div>
+      <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Claim Phase</div>
       ${isClaimer ? `
-        <div class="status-msg" style="color:var(--accent2);margin-bottom:16px;font-weight:600">🎤 It's your turn — submit a claim!</div>
+        <div class="status-msg" style="color:var(--accent2);font-weight:600;margin-bottom:16px">🎤 Your turn — submit a claim!</div>
         <div class="form-group">
-          <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px 16px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px" />
+          <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/>
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
       ` : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to submit a claim...</div>`}`;
@@ -482,14 +491,14 @@ function renderGame(room) {
   if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
     el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Vote Now!</div>
+      <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Vote!</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
       ${(hasVoted || isClaimer) ? `
-        <div class="status-msg pulse">✅ ${isClaimer ? "You submitted this claim" : "Your vote is in"} — waiting for everyone...</div>
+        <div class="status-msg pulse">✅ ${isClaimer ? "You made this claim" : "Vote submitted!"} Waiting for others...</div>
         <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>
       ` : `
-        <div class="timer-ring"><div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div></div>
-        <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this claim TRUE or FALSE?</p>
+        <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
+        <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
         <div class="vote-btns">
           <button class="vote-btn fact" onclick="castVote('${room.id}',true)">✅<br><span style="font-size:14px">FACT</span></button>
           <button class="vote-btn cap" onclick="castVote('${room.id}',false)">❌<br><span style="font-size:14px">CAP</span></button>
@@ -510,10 +519,10 @@ function startTimer() {
 
 async function submitClaim(roomId) {
   const claim = document.getElementById("claimInput")?.value?.trim();
-  if (!claim || claim.length < 10) return showToast("Claim must be at least 10 characters", "error");
+  if (!claim || claim.length < 10) return showToast("Claim needs 10+ characters", "error");
   try {
-    showToast("Submitting claim...");
-    const tx = await writeContract.submit_claim(roomId, walletAddress, claim);
+    showToast("Submitting...");
+    const tx = await writeClient.submit_claim(roomId, walletAddress, claim);
     await tx.wait();
     showToast("Claim submitted!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
@@ -523,22 +532,21 @@ async function castVote(roomId, isFact) {
   try {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     showToast(isFact ? "Voting FACT..." : "Voting CAP...");
-    const tx = await writeContract.vote(roomId, walletAddress, isFact);
+    const tx = await writeClient.vote(roomId, walletAddress, isFact);
     await tx.wait();
-    showToast("Vote submitted!", "success");
+    showToast("Vote in!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 async function resolveRound(roomId) {
   try {
-    showToast("🤖 Asking AI validators...");
-    const tx = await writeContract.resolve_round(roomId);
+    showToast("🤖 AI validators deciding...");
+    const tx = await writeClient.resolve_round(roomId);
     await tx.wait();
     showToast("Verdict revealed!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
-// ─── RESULTS ─────────────────────────────────────────────────────────────────
 async function showResults(room) {
   showScreen("resultsScreen");
   const xpMap = {};
@@ -552,7 +560,6 @@ async function showResults(room) {
     </div>`).join("");
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
 function shortAddr(addr) { return addr ? addr.slice(0,6)+"..."+addr.slice(-4) : "?"; }
 function showToast(msg, type="") {
   const t = document.getElementById("toast");
@@ -561,7 +568,8 @@ function showToast(msg, type="") {
   setTimeout(()=>t.className="toast", 3000);
 }
 
-// Init
+// expose for module script
+window.walletAddress = null;
 updateUsernameDisplay();
 </script>
 </body>
