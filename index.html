@@ -281,7 +281,7 @@ async function connectWallet() {
     const provider = new ethers.BrowserProvider(eth);
     const signer = await provider.getSigner();
     const ABI = [
-      "function create_room(string,string,bool,uint256,uint256) returns (string)",
+      "function create_room(string,string,bool,uint8,uint8) returns (string)",
       "function join_room(string,string,string) returns (string)",
       "function start_game(string,string) returns (string)",
       "function submit_claim(string,string,string) returns (string)",
