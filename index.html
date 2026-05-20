@@ -7,311 +7,83 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --surface2: #1c1c28;
-      --border: #2a2a3a;
-      --accent: #7c3aed;
-      --accent2: #a855f7;
-      --green: #22c55e;
-      --red: #ef4444;
-      --yellow: #eab308;
-      --text: #f1f1f3;
-      --muted: #6b7280;
-      --radius: 12px;
+      --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c28;
+      --border: #2a2a3a; --accent: #7c3aed; --accent2: #a855f7;
+      --green: #22c55e; --red: #ef4444; --yellow: #eab308;
+      --text: #f1f1f3; --muted: #6b7280; --radius: 12px;
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-    }
-
-    /* NAV */
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      font-size: 22px;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .nav-right { display: flex; align-items: center; gap: 12px; }
-
-    /* BUTTONS */
-    .btn {
-      padding: 10px 20px;
-      border-radius: var(--radius);
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
+    .btn { padding: 10px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
     .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
     .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-green { background: var(--green); color: white; }
-    .btn-green:hover { opacity: 0.9; }
-    .btn-red { background: var(--red); color: white; }
-    .btn-red:hover { opacity: 0.9; }
     .btn-lg { padding: 14px 32px; font-size: 16px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    /* DISCLAIMER */
-    .disclaimer {
-      background: #1a1a0a;
-      border-bottom: 1px solid #3a3a00;
-      padding: 8px 32px;
-      font-size: 12px;
-      color: var(--yellow);
-      text-align: center;
-    }
-
-    /* SCREENS */
+    .disclaimer { background: #1a1a0a; border-bottom: 1px solid #3a3a00; padding: 8px 32px; font-size: 12px; color: var(--yellow); text-align: center; }
     .screen { display: none; }
     .screen.active { display: block; }
-
-    /* HOME */
-    .hero {
-      text-align: center;
-      padding: 80px 32px 40px;
-    }
-    .hero h1 {
-      font-size: 56px;
-      font-weight: 900;
-      background: linear-gradient(135deg, #fff, var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 16px;
-    }
-    .hero p {
-      font-size: 18px;
-      color: var(--muted);
-      margin-bottom: 40px;
-    }
+    .hero { text-align: center; padding: 80px 32px 40px; }
+    .hero h1 { font-size: 56px; font-weight: 900; background: linear-gradient(135deg, #fff, var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+    .hero p { font-size: 18px; color: var(--muted); margin-bottom: 40px; }
     .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-
-    /* CARDS */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-    }
-
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
     .container { max-width: 800px; margin: 0 auto; padding: 32px; }
-
-    /* LEADERBOARD */
     .leaderboard { max-width: 600px; margin: 0 auto; padding: 0 32px 60px; }
     .leaderboard h2 { text-align: center; margin-bottom: 20px; font-size: 22px; }
-    .lb-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
+    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); }
     .lb-rank { font-size: 18px; width: 32px; }
     .lb-player { flex: 1; padding: 0 12px; font-size: 14px; color: var(--muted); }
     .lb-xp { font-weight: 700; color: var(--accent2); }
-
-    /* FORM */
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
-    .form-group input, .form-group select {
-      width: 100%;
-      padding: 12px 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 14px;
-    }
-    .form-group input:focus, .form-group select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    /* LOBBY */
+    .form-group input, .form-group select { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
     .player-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
-    .player-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface2);
-      border-radius: 8px;
-      font-size: 14px;
-    }
+    .player-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 14px; }
     .player-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-
-    /* INVITE BOX */
-    .invite-box {
-      background: var(--surface2);
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      text-align: center;
-      margin: 16px 0;
-    }
+    .invite-box { background: var(--surface2); border: 1px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0; }
     .invite-code { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: var(--accent2); }
-
-    /* GAME */
-    .round-badge {
-      display: inline-block;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 4px 16px;
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-    .claim-box {
-      background: var(--surface2);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius);
-      padding: 32px;
-      text-align: center;
-      margin: 24px 0;
-    }
+    .round-badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 16px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .claim-box { background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius); padding: 32px; text-align: center; margin: 24px 0; }
     .claim-text { font-size: 22px; font-weight: 700; line-height: 1.4; }
     .vote-btns { display: flex; gap: 16px; justify-content: center; margin: 24px 0; }
-    .vote-btn {
-      flex: 1;
-      max-width: 200px;
-      padding: 20px;
-      border-radius: var(--radius);
-      border: 2px solid transparent;
-      cursor: pointer;
-      font-size: 20px;
-      font-weight: 800;
-      transition: all 0.2s;
-      background: var(--surface2);
-      color: var(--text);
-    }
+    .vote-btn { flex: 1; max-width: 200px; padding: 20px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 20px; font-weight: 800; transition: all 0.2s; background: var(--surface2); color: var(--text); }
     .vote-btn.fact { border-color: var(--green); }
     .vote-btn.fact:hover { background: var(--green); color: white; }
     .vote-btn.cap { border-color: var(--red); }
     .vote-btn.cap:hover { background: var(--red); color: white; }
-
-    /* TIMER */
-    .timer-ring {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 16px auto;
-    }
-    .timer-num {
-      font-size: 48px;
-      font-weight: 900;
-      color: var(--accent2);
-    }
+    .timer-ring { display: flex; align-items: center; justify-content: center; margin: 16px auto; }
+    .timer-num { font-size: 48px; font-weight: 900; color: var(--accent2); }
     .timer-num.urgent { color: var(--red); }
-
-    /* VERDICT */
-    .verdict-box {
-      text-align: center;
-      padding: 40px;
-      border-radius: var(--radius);
-      margin: 24px 0;
-    }
+    .verdict-box { text-align: center; padding: 40px; border-radius: var(--radius); margin: 24px 0; }
     .verdict-box.true { background: #0a2a0a; border: 2px solid var(--green); }
     .verdict-box.false { background: #2a0a0a; border: 2px solid var(--red); }
     .verdict-label { font-size: 48px; font-weight: 900; margin-bottom: 12px; }
     .verdict-reasoning { font-size: 15px; color: var(--muted); font-style: italic; }
-
-    /* XP */
     .xp-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
-    .xp-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: var(--surface2);
-      border-radius: 8px;
-      font-size: 14px;
-    }
+    .xp-row { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 14px; }
     .xp-gain { color: var(--green); font-weight: 700; }
-
-    /* STATUS */
-    .status-msg {
-      text-align: center;
-      padding: 20px;
-      color: var(--muted);
-      font-size: 15px;
-    }
+    .status-msg { text-align: center; padding: 20px; color: var(--muted); font-size: 15px; }
     .pulse { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    /* USERNAME MODAL */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      width: 90%;
-      max-width: 400px;
-    }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; width: 90%; max-width: 400px; }
     .modal h3 { margin-bottom: 20px; }
-
-    /* TOAST */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 14px;
-      z-index: 300;
-      transform: translateY(100px);
-      transition: transform 0.3s;
-    }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 14px; z-index: 300; transform: translateY(100px); transition: transform 0.3s; }
     .toast.show { transform: translateY(0); }
     .toast.success { border-color: var(--green); color: var(--green); }
     .toast.error { border-color: var(--red); color: var(--red); }
-
-    @media(max-width:600px) {
-      .hero h1 { font-size: 36px; }
-      nav { padding: 12px 16px; }
-      .container { padding: 16px; }
-    }
+    @media(max-width:600px) { .hero h1 { font-size: 36px; } nav { padding: 12px 16px; } .container { padding: 16px; } }
   </style>
 </head>
 <body>
 
-<!-- USERNAME MODAL -->
 <div class="modal-overlay" id="usernameModal">
   <div class="modal">
     <h3>Set Your Username</h3>
@@ -323,10 +95,8 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- NAV -->
 <nav>
   <div class="logo">Fact or Cap</div>
   <div class="nav-right">
@@ -335,12 +105,10 @@
   </div>
 </nav>
 
-<!-- DISCLAIMER -->
 <div class="disclaimer">
-  ⚠️ Testnet demo — Use a burner wallet only. This game runs on GenLayer Bradbury testnet.
+  ⚠️ Testnet demo — Use a burner wallet only. This game runs on GenLayer Studionet.
 </div>
 
-<!-- HOME SCREEN -->
 <div class="screen active" id="homeScreen">
   <div class="hero">
     <h1>Fact or Cap? 🎯</h1>
@@ -350,14 +118,12 @@
       <button class="btn btn-outline btn-lg" onclick="showScreen('joinScreen')">Join Room</button>
     </div>
   </div>
-
   <div class="leaderboard">
     <h2>🏆 Global Leaderboard</h2>
     <div id="leaderboardList"><div class="status-msg pulse">Loading...</div></div>
   </div>
 </div>
 
-<!-- CREATE SCREEN -->
 <div class="screen" id="createScreen">
   <div class="container">
     <button class="btn btn-outline" style="margin-bottom:24px" onclick="showScreen('homeScreen')">← Back</button>
@@ -396,7 +162,6 @@
   </div>
 </div>
 
-<!-- JOIN SCREEN -->
 <div class="screen" id="joinScreen">
   <div class="container">
     <button class="btn btn-outline" style="margin-bottom:24px" onclick="showScreen('homeScreen')">← Back</button>
@@ -408,14 +173,13 @@
       </div>
       <div class="form-group">
         <label>Invite Code (leave empty for public rooms)</label>
-        <input type="text" id="joinInviteCode" placeholder="e.g. FOC0001" />
+        <input type="text" id="joinInviteCode" placeholder="e.g. FOCtest1" />
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="joinRoom()">Join Room</button>
     </div>
   </div>
 </div>
 
-<!-- LOBBY SCREEN -->
 <div class="screen" id="lobbyScreen">
   <div class="container">
     <div class="card">
@@ -433,14 +197,12 @@
   </div>
 </div>
 
-<!-- GAME SCREEN -->
 <div class="screen" id="gameScreen">
   <div class="container">
     <div id="gameContent"></div>
   </div>
 </div>
 
-<!-- RESULTS SCREEN -->
 <div class="screen" id="resultsScreen">
   <div class="container">
     <div class="card" style="text-align:center">
@@ -456,7 +218,6 @@
 </div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
 const CONTRACT_ADDRESS = "0xD38869ccBFBb0dfa10Dc30289ffC0E2CAd87CBf6";
 const RPC_URL = "https://studio.genlayer.com/api";
 const CHAIN_ID = 61999;
@@ -474,7 +235,6 @@ const ABI = [
   "function get_room_count() view returns (string)"
 ];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
 let provider, signer, contract, walletAddress;
 let currentRoom = null;
 let currentRoomId = null;
@@ -482,13 +242,33 @@ let pollInterval = null;
 let timerInterval = null;
 let timerSeconds = 30;
 let username = localStorage.getItem("foc_username") || "";
-let xpGainedThisGame = {};
+
+// ─── GENLAYER READ ────────────────────────────────────────────────────────────
+async function glRead(method, args = []) {
+  const res = await fetch(RPC_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      method: "gen_call",
+      params: [{ to: CONTRACT_ADDRESS, data: { function: method, args: args } }, "latest"],
+      id: 1
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(JSON.stringify(data.error));
+  return data.result;
+}
 
 // ─── WALLET ───────────────────────────────────────────────────────────────────
 async function connectWallet() {
-  if (!window.ethereum) return showToast("Install MetaMask first", "error");
+  let eth = window.ethereum;
+  if (window.ethereum?.providers) {
+    eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
+  }
+  if (!eth) return showToast("Install MetaMask first", "error");
   try {
-    provider = new ethers.BrowserProvider(window.ethereum);
+    provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
     walletAddress = await signer.getAddress();
@@ -499,7 +279,7 @@ async function connectWallet() {
     else updateUsernameDisplay();
     loadLeaderboard();
     showToast("Wallet connected!", "success");
-  } catch(e) { showToast("Connection failed", "error"); }
+  } catch(e) { showToast("Connection failed", "error"); console.error(e); }
 }
 
 function disconnectWallet() {
@@ -514,7 +294,6 @@ function showUsernameModal() {
   document.getElementById("usernameInput").value = username;
   document.getElementById("usernameModal").classList.add("active");
 }
-
 function saveUsername() {
   const val = document.getElementById("usernameInput").value.trim();
   if (!val) return showToast("Enter a username", "error");
@@ -524,10 +303,8 @@ function saveUsername() {
   updateUsernameDisplay();
   showToast("Username saved!", "success");
 }
-
 function updateUsernameDisplay() {
-  const el = document.getElementById("usernameDisplay");
-  el.textContent = username ? "👤 " + username : "";
+  document.getElementById("usernameDisplay").textContent = username ? "👤 " + username : "";
 }
 
 // ─── SCREENS ──────────────────────────────────────────────────────────────────
@@ -542,9 +319,7 @@ function showScreen(id) {
 async function loadLeaderboard() {
   const el = document.getElementById("leaderboardList");
   try {
-    const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI,
-      new ethers.JsonRpcProvider(RPC_URL));
-    const raw = await readContract.get_leaderboard();
+    const raw = await glRead("get_leaderboard");
     const entries = JSON.parse(raw);
     if (!entries.length) { el.innerHTML = '<div class="status-msg">No players yet — be the first!</div>'; return; }
     const medals = ["🥇","🥈","🥉"];
@@ -554,7 +329,7 @@ async function loadLeaderboard() {
         <div class="lb-player">${getDisplayName(e.player)}</div>
         <div class="lb-xp">${e.xp} XP</div>
       </div>`).join("");
-  } catch(e) { el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>'; }
+  } catch(e) { el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>'; console.error(e); }
 }
 
 // ─── CREATE ROOM ──────────────────────────────────────────────────────────────
@@ -572,7 +347,7 @@ async function createRoom() {
     currentRoomId = roomId;
     showToast("Room created!", "success");
     goToLobby(roomId);
-  } catch(e) { showToast("Failed: " + (e.reason || e.message), "error"); }
+  } catch(e) { showToast("Failed: " + (e.reason || e.message), "error"); console.error(e); }
 }
 
 // ─── JOIN ROOM ────────────────────────────────────────────────────────────────
@@ -588,23 +363,21 @@ async function joinRoom() {
     currentRoomId = roomId;
     showToast("Joined!", "success");
     goToLobby(roomId);
-  } catch(e) { showToast("Failed: " + (e.reason || e.message), "error"); }
+  } catch(e) { showToast("Failed: " + (e.reason || e.message), "error"); console.error(e); }
 }
 
 // ─── LOBBY ────────────────────────────────────────────────────────────────────
 async function goToLobby(roomId) {
   showScreen("lobbyScreen");
   document.getElementById("lobbyRoomId").textContent = roomId;
-  document.getElementById("lobbyInviteCode").textContent = "FOC" + roomId.padStart(4,"0");
+  document.getElementById("lobbyInviteCode").textContent = "FOC" + roomId;
   pollInterval = setInterval(() => pollLobby(roomId), 3000);
   pollLobby(roomId);
 }
 
 async function pollLobby(roomId) {
   try {
-    const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI,
-      new ethers.JsonRpcProvider(RPC_URL));
-    const raw = await readContract.get_room(roomId);
+    const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
     currentRoom = room;
     if (room.game_started) { clearInterval(pollInterval); goToGame(roomId); return; }
@@ -618,10 +391,10 @@ async function pollLobby(roomId) {
     const canStart = isHost && room.players.length >= 2;
     document.getElementById("lobbyStartBtn").innerHTML = isHost
       ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">
-          ${canStart ? "Start Game" : "Waiting for more players..."}
+          ${canStart ? "🚀 Start Game" : "Waiting for more players..."}
          </button>`
       : `<div class="status-msg pulse">Waiting for host to start...</div>`;
-  } catch(e) {}
+  } catch(e) { console.error("pollLobby error:", e); }
 }
 
 async function startGame(roomId) {
@@ -630,7 +403,7 @@ async function startGame(roomId) {
     const tx = await contract.start_game(roomId, walletAddress);
     await tx.wait();
     showToast("Game started!", "success");
-  } catch(e) { showToast("Failed", "error"); }
+  } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 // ─── GAME ─────────────────────────────────────────────────────────────────────
@@ -642,14 +415,12 @@ async function goToGame(roomId) {
 
 async function pollGame(roomId) {
   try {
-    const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI,
-      new ethers.JsonRpcProvider(RPC_URL));
-    const raw = await readContract.get_room(roomId);
+    const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
     currentRoom = room;
     if (room.game_finished) { clearInterval(pollInterval); showResults(room); return; }
     renderGame(room);
-  } catch(e) {}
+  } catch(e) { console.error("pollGame error:", e); }
 }
 
 function renderGame(room) {
@@ -677,9 +448,8 @@ function renderGame(room) {
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Claiming Phase</div>
       ${isClaimer ? `
-        <div class="status-msg" style="color:var(--accent2);margin-bottom:16px">🎤 It's your turn to submit a claim!</div>
+        <div class="status-msg" style="color:var(--accent2);margin-bottom:16px">🎤 Your turn! Submit a claim.</div>
         <div class="form-group">
-          <label>Your Claim</label>
           <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px" />
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
@@ -690,15 +460,16 @@ function renderGame(room) {
   }
 
   if (rnd.voting_open) {
-    if (!timerInterval && !hasVoted) startTimer();
+    if (!timerInterval && !hasVoted && !isClaimer) startTimer();
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Voting Phase</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      ${hasVoted || isClaimer ? `
+      ${(hasVoted || isClaimer) ? `
         <div class="status-msg pulse">✅ Vote submitted — waiting for others...</div>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="resolveRound('${room.id}')">Reveal Verdict</button>
+        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Reveal AI Verdict</button>
       ` : `
         <div class="timer-ring"><div class="timer-num ${timerSeconds<=10?'urgent':''}" id="timerDisplay">${timerSeconds}</div></div>
+        <p style="text-align:center;color:var(--muted);margin-bottom:8px">Is this claim true?</p>
         <div class="vote-btns">
           <button class="vote-btn fact" onclick="castVote('${room.id}', true)">✅<br>FACT</button>
           <button class="vote-btn cap" onclick="castVote('${room.id}', false)">❌<br>CAP</button>
@@ -727,7 +498,7 @@ async function submitClaim(roomId) {
     const tx = await contract.submit_claim(roomId, walletAddress, claim);
     await tx.wait();
     showToast("Claim submitted!", "success");
-  } catch(e) { showToast("Failed", "error"); }
+  } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 async function castVote(roomId, isFact) {
@@ -737,16 +508,16 @@ async function castVote(roomId, isFact) {
     const tx = await contract.vote(roomId, walletAddress, isFact);
     await tx.wait();
     showToast("Vote cast!", "success");
-  } catch(e) { showToast("Failed", "error"); }
+  } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 async function resolveRound(roomId) {
   try {
-    showToast("AI validators are thinking...");
+    showToast("🤖 AI validators are thinking...");
     const tx = await contract.resolve_round(roomId);
     await tx.wait();
     showToast("Verdict in!", "success");
-  } catch(e) { showToast("Failed", "error"); }
+  } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 // ─── RESULTS ─────────────────────────────────────────────────────────────────
@@ -754,12 +525,10 @@ async function showResults(room) {
   showScreen("resultsScreen");
   const xpMap = {};
   try {
-    const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI,
-      new ethers.JsonRpcProvider(RPC_URL));
     for (const p of room.players) {
-      xpMap[p] = await readContract.get_player_xp(p);
+      xpMap[p] = await glRead("get_player_xp", [p]);
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
   document.getElementById("finalXpList").innerHTML = room.players.map(p => `
     <div class="xp-row">
       <span>${getDisplayName(p)} ${p.toLowerCase()===walletAddress?.toLowerCase()?"(You)":""}</span>
@@ -768,16 +537,12 @@ async function showResults(room) {
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
-function shortAddr(addr) {
-  return addr ? addr.slice(0,6) + "..." + addr.slice(-4) : "";
-}
-
+function shortAddr(addr) { return addr ? addr.slice(0,6) + "..." + addr.slice(-4) : ""; }
 function getDisplayName(addr) {
   if (!addr) return "Unknown";
   if (addr.toLowerCase() === walletAddress?.toLowerCase() && username) return username;
   return shortAddr(addr);
 }
-
 function showToast(msg, type="") {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -785,7 +550,6 @@ function showToast(msg, type="") {
   setTimeout(() => t.className = "toast", 3000);
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
 updateUsernameDisplay();
 loadLeaderboard();
 </script>
