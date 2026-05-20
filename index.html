@@ -402,7 +402,9 @@ async function joinRoom() {
 async function goToLobby(roomId) {
   showScreen("lobbyScreen");
   document.getElementById("lobbyRoomId").textContent = roomId;
-  document.getElementById("lobbyInviteCode").textContent = "Loading...";
+  document.getElementById("lobbyInviteCode").textContent = "Confirming on blockchain...";
+  // Wait 5 seconds for GenLayer to finalize the transaction
+  await new Promise(r => setTimeout(r, 5000));
   pollInterval = setInterval(() => pollLobby(roomId), 3000);
   pollLobby(roomId);
 }
@@ -412,10 +414,13 @@ async function pollLobby(roomId) {
     const raw = await glRead("get_room", [roomId]);
     alert("RAW: " + raw);
     const room = JSON.parse(raw);
-    if (room.error) return;
-    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room (no code needed)";
-    if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
-    document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
+    if (room.error) {
+  document.getElementById("lobbyInviteCode").textContent = "Confirming on blockchain...";
+  document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Waiting for GenLayer to confirm...</div>';
+  return;
+}
+document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room (no code needed)";
+if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
       <div class="player-item">
         <div class="player-dot"></div>
         <span>${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : shortAddr(p)}</span>
