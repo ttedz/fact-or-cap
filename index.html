@@ -88,10 +88,10 @@
   <div class="modal">
     <h3>Set Your Username</h3>
     <div class="form-group">
-      <label>Username (shown to other players)</label>
+      <label>Choose a display name</label>
       <input type="text" id="usernameInput" placeholder="e.g. CryptoSherlock" maxlength="20" />
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="saveUsername()">Save & Continue</button>
+    <button class="btn btn-primary" style="width:100%" onclick="saveUsername()">Save & Play</button>
   </div>
 </div>
 
@@ -106,7 +106,7 @@
 </nav>
 
 <div class="disclaimer">
-  ⚠️ Testnet demo — Use a burner wallet only. This game runs on GenLayer Studionet.
+  ⚠️ Testnet demo — Use a burner wallet only. Runs on GenLayer Studionet.
 </div>
 
 <div class="screen active" id="homeScreen">
@@ -114,13 +114,13 @@
     <h1>Fact or Cap? 🎯</h1>
     <p>Submit claims. Vote. Let AI validators on GenLayer decide the truth.</p>
     <div class="hero-btns">
-      <button class="btn btn-primary btn-lg" onclick="showScreen('createScreen')">Create Room</button>
-      <button class="btn btn-outline btn-lg" onclick="showScreen('joinScreen')">Join Room</button>
+      <button class="btn btn-primary btn-lg" onclick="requireWallet('createScreen')">Create Room</button>
+      <button class="btn btn-outline btn-lg" onclick="requireWallet('joinScreen')">Join Room</button>
     </div>
   </div>
   <div class="leaderboard">
     <h2>🏆 Global Leaderboard</h2>
-    <div id="leaderboardList"><div class="status-msg pulse">Loading...</div></div>
+    <div id="leaderboardList"><div class="status-msg">Connect wallet to load leaderboard</div></div>
   </div>
 </div>
 
@@ -130,8 +130,8 @@
     <div class="card">
       <h2 style="margin-bottom:24px">Create a Room</h2>
       <div class="form-group">
-        <label>Room ID (share this with friends)</label>
-        <input type="text" id="createRoomId" placeholder="e.g. room42" />
+        <label>Room ID — share this with friends</label>
+        <input type="text" id="createRoomId" placeholder="e.g. funroom1" />
       </div>
       <div class="form-group">
         <label>Room Type</label>
@@ -141,7 +141,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Max Players (2-6)</label>
+        <label>Max Players (2–6)</label>
         <select id="createMaxPlayers">
           <option value="2">2 players</option>
           <option value="3">3 players</option>
@@ -150,11 +150,11 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Number of Rounds (3-7)</label>
+        <label>Rounds (3–7)</label>
         <select id="createRounds">
-          <option value="3">3 rounds</option>
-          <option value="5">5 rounds</option>
-          <option value="7">7 rounds</option>
+          <option value="3">3 rounds (~10 min)</option>
+          <option value="5">5 rounds (~15 min)</option>
+          <option value="7">7 rounds (~20 min)</option>
         </select>
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="createRoom()">Create Room</button>
@@ -169,11 +169,11 @@
       <h2 style="margin-bottom:24px">Join a Room</h2>
       <div class="form-group">
         <label>Room ID</label>
-        <input type="text" id="joinRoomId" placeholder="e.g. room42" />
+        <input type="text" id="joinRoomId" placeholder="Ask the host for Room ID" />
       </div>
       <div class="form-group">
-        <label>Invite Code (leave empty for public rooms)</label>
-        <input type="text" id="joinInviteCode" placeholder="e.g. FOCtest1" />
+        <label>Invite Code (only for private rooms)</label>
+        <input type="text" id="joinInviteCode" placeholder="Leave empty for public rooms" />
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="joinRoom()">Join Room</button>
     </div>
@@ -183,12 +183,12 @@
 <div class="screen" id="lobbyScreen">
   <div class="container">
     <div class="card">
-      <h2 style="margin-bottom:8px">Waiting for Players</h2>
-      <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Share the room details below</p>
+      <h2 style="margin-bottom:8px">Lobby</h2>
+      <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Share these details with friends</p>
       <div class="invite-box">
         <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Room ID</div>
-        <div style="font-size:20px;font-weight:700" id="lobbyRoomId"></div>
-        <div style="font-size:13px;color:var(--muted);margin:8px 0 4px">Invite Code</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)" id="lobbyRoomId"></div>
+        <div style="font-size:13px;color:var(--muted);margin:12px 0 4px">Invite Code</div>
         <div class="invite-code" id="lobbyInviteCode"></div>
       </div>
       <div class="player-list" id="lobbyPlayers"></div>
@@ -205,45 +205,59 @@
   <div class="container">
     <div class="card" style="text-align:center">
       <h2 style="margin-bottom:8px">🎉 Game Over!</h2>
-      <p style="color:var(--muted);margin-bottom:24px">Final XP earned this game</p>
+      <p style="color:var(--muted);margin-bottom:24px">XP earned this game</p>
       <div class="xp-list" id="finalXpList"></div>
       <div style="margin-top:24px;display:flex;gap:12px;justify-content:center">
-        <button class="btn btn-primary" onclick="showScreen('homeScreen');loadLeaderboard()">Home</button>
-        <button class="btn btn-outline" onclick="showScreen('createScreen')">Play Again</button>
+        <button class="btn btn-primary" onclick="showScreen('homeScreen');loadLeaderboard()">🏠 Home</button>
+        <button class="btn btn-outline" onclick="showScreen('createScreen')">🔁 Play Again</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
 const CONTRACT_ADDRESS = "0xD38869ccBFBb0dfa10Dc30289ffC0E2CAd87CBf6";
-const RPC_URL = "https://studio.genlayer.com/api";
 const CHAIN_ID = 61999;
+const CHAIN_ID_HEX = "0xF22F";
+const STUDIONET = {
+  chainId: CHAIN_ID_HEX,
+  chainName: "GenLayer Studionet",
+  nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+  rpcUrls: ["https://studio.genlayer.com/api"],
+  blockExplorerUrls: ["https://explorer-studio.genlayer.com"]
+};
 
-const ABI = [
-  "function create_room(string room_id, string host, bool is_private, uint256 max_players, uint256 total_rounds) returns (string)",
-  "function join_room(string room_id, string player, string invite_code) returns (string)",
-  "function start_game(string room_id, string caller) returns (string)",
-  "function submit_claim(string room_id, string player, string claim) returns (string)",
-  "function vote(string room_id, string player, bool is_fact) returns (string)",
-  "function resolve_round(string room_id) returns (string)"
+const WRITE_ABI = [
+  "function create_room(string,string,bool,uint256,uint256) returns (string)",
+  "function join_room(string,string,string) returns (string)",
+  "function start_game(string,string) returns (string)",
+  "function submit_claim(string,string,string) returns (string)",
+  "function vote(string,string,bool) returns (string)",
+  "function resolve_round(string) returns (string)"
 ];
 
-let provider, signer, contract, walletAddress;
-let currentRoom = null, currentRoomId = null;
+const READ_ABI = [
+  "function get_room(string) view returns (string)",
+  "function get_player_xp(string) view returns (string)",
+  "function get_leaderboard() view returns (string)",
+  "function get_room_count() view returns (string)"
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let provider, signer, writeContract, readContract, walletAddress;
 let pollInterval = null, timerInterval = null, timerSeconds = 30;
 let username = localStorage.getItem("foc_username") || "";
-let glClient = null;
 
-// ─── GENLAYER READ via genlayer-js ───────────────────────────────────────────
-async function glRead(method, args = []) {
-  if (!glClient) throw new Error("genlayer-js not ready");
-  const result = await glClient.readContract({
-    address: CONTRACT_ADDRESS,
-    functionName: method,
-    args: args,
-  });
-  return result;
+// ─── NETWORK ──────────────────────────────────────────────────────────────────
+async function switchToStudionet(eth) {
+  try {
+    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_ID_HEX }] });
+  } catch(e) {
+    if (e.code === 4902 || e.code === -32603) {
+      await eth.request({ method: "wallet_addEthereumChain", params: [STUDIONET] });
+    }
+  }
 }
 
 // ─── WALLET ───────────────────────────────────────────────────────────────────
@@ -252,43 +266,59 @@ async function connectWallet() {
   if (window.ethereum?.providers) eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
   if (!eth) return showToast("Install MetaMask first", "error");
   try {
+    await eth.request({ method: "eth_requestAccounts" });
+    await switchToStudionet(eth);
     provider = new ethers.BrowserProvider(eth);
-    await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
     walletAddress = await signer.getAddress();
-    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-    document.getElementById("walletBtn").textContent = shortAddr(walletAddress);
-    document.getElementById("walletBtn").onclick = disconnectWallet;
+    writeContract = new ethers.Contract(CONTRACT_ADDRESS, WRITE_ABI, signer);
+    readContract = new ethers.Contract(CONTRACT_ADDRESS, READ_ABI, provider);
+    const btn = document.getElementById("walletBtn");
+    btn.textContent = shortAddr(walletAddress);
+    btn.onclick = disconnectWallet;
+    updateUsernameDisplay();
     if (!username) showUsernameModal();
-    else updateUsernameDisplay();
     loadLeaderboard();
-    showToast("Wallet connected!", "success");
-  } catch(e) { showToast("Connection failed", "error"); console.error(e); }
+    showToast("Connected to GenLayer Studionet ✅", "success");
+  } catch(e) {
+    showToast("Connection failed: " + (e.message || "Unknown error"), "error");
+    console.error(e);
+  }
 }
 
 function disconnectWallet() {
-  provider = signer = contract = walletAddress = null;
-  document.getElementById("walletBtn").textContent = "Connect Wallet";
-  document.getElementById("walletBtn").onclick = connectWallet;
-  showToast("Wallet disconnected");
+  provider = signer = writeContract = readContract = walletAddress = null;
+  const btn = document.getElementById("walletBtn");
+  btn.textContent = "Connect Wallet";
+  btn.onclick = connectWallet;
+  document.getElementById("usernameDisplay").textContent = "";
+  document.getElementById("leaderboardList").innerHTML = '<div class="status-msg">Connect wallet to load leaderboard</div>';
+  showScreen("homeScreen");
+  showToast("Disconnected");
+}
+
+function requireWallet(screen) {
+  if (!walletAddress) return showToast("Connect your wallet first", "error");
+  showScreen(screen);
 }
 
 // ─── USERNAME ─────────────────────────────────────────────────────────────────
 function showUsernameModal() {
-  document.getElementById("usernameInput").value = username;
+  document.getElementById("usernameInput").value = username || "";
   document.getElementById("usernameModal").classList.add("active");
 }
 function saveUsername() {
   const val = document.getElementById("usernameInput").value.trim();
-  if (!val) return showToast("Enter a username", "error");
+  if (!val) return showToast("Please enter a username", "error");
   username = val;
   localStorage.setItem("foc_username", username);
   document.getElementById("usernameModal").classList.remove("active");
   updateUsernameDisplay();
-  showToast("Username saved!", "success");
+  showToast("Username set: " + username, "success");
 }
 function updateUsernameDisplay() {
-  document.getElementById("usernameDisplay").textContent = username ? "👤 " + username : "";
+  const el = document.getElementById("usernameDisplay");
+  el.textContent = username && walletAddress ? "👤 " + username : "";
 }
 
 // ─── SCREENS ──────────────────────────────────────────────────────────────────
@@ -299,158 +329,170 @@ function showScreen(id) {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 }
 
+// ─── READ CONTRACT ────────────────────────────────────────────────────────────
+async function glRead(method, args = []) {
+  if (!readContract) throw new Error("Not connected");
+  return await readContract[method](...args);
+}
+
 // ─── LEADERBOARD ──────────────────────────────────────────────────────────────
 async function loadLeaderboard() {
   const el = document.getElementById("leaderboardList");
+  if (!readContract) return;
+  el.innerHTML = '<div class="status-msg pulse">Loading...</div>';
   try {
-    const raw = await glRead("get_leaderboard", []);
+    const raw = await glRead("get_leaderboard");
     const entries = JSON.parse(raw);
     if (!entries.length) { el.innerHTML = '<div class="status-msg">No players yet — be the first!</div>'; return; }
     const medals = ["🥇","🥈","🥉"];
     el.innerHTML = entries.map((e,i) => `
       <div class="lb-row">
-        <div class="lb-rank">${medals[i] || (i+1)}</div>
-        <div class="lb-player">${getDisplayName(e.player)}</div>
+        <div class="lb-rank">${medals[i] || "#"+(i+1)}</div>
+        <div class="lb-player">${shortAddr(e.player)}</div>
         <div class="lb-xp">${e.xp} XP</div>
       </div>`).join("");
-  } catch(e) { el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>'; console.error("LB error:", e); }
+  } catch(e) {
+    el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>';
+    console.error("Leaderboard error:", e);
+  }
 }
 
 // ─── CREATE ROOM ──────────────────────────────────────────────────────────────
 async function createRoom() {
-  if (!walletAddress) return showToast("Connect wallet first", "error");
   const roomId = document.getElementById("createRoomId").value.trim();
   if (!roomId) return showToast("Enter a room ID", "error");
+  if (roomId.length > 20) return showToast("Room ID too long (max 20 chars)", "error");
   const isPrivate = document.getElementById("createPrivate").value === "true";
   const maxPlayers = parseInt(document.getElementById("createMaxPlayers").value);
   const rounds = parseInt(document.getElementById("createRounds").value);
   try {
-    showToast("Creating room...");
-    const tx = await contract.create_room(roomId, walletAddress, isPrivate, maxPlayers, rounds);
+    showToast("Creating room on GenLayer...");
+    const tx = await writeContract.create_room(roomId, walletAddress, isPrivate, maxPlayers, rounds);
     await tx.wait();
-    currentRoomId = roomId;
     showToast("Room created!", "success");
-    goToLobby(roomId);
-  } catch(e) { showToast("Failed: " + (e.reason || e.message), "error"); console.error(e); }
+    goToLobby(roomId, isPrivate);
+  } catch(e) { showToast("Failed: " + (e.reason || e.message || "Error"), "error"); console.error(e); }
 }
 
 // ─── JOIN ROOM ────────────────────────────────────────────────────────────────
 async function joinRoom() {
-  if (!walletAddress) return showToast("Connect wallet first", "error");
   const roomId = document.getElementById("joinRoomId").value.trim();
   const inviteCode = document.getElementById("joinInviteCode").value.trim();
   if (!roomId) return showToast("Enter a room ID", "error");
   try {
     showToast("Joining room...");
-    const tx = await contract.join_room(roomId, walletAddress, inviteCode);
+    const tx = await writeContract.join_room(roomId, walletAddress, inviteCode);
     await tx.wait();
-    currentRoomId = roomId;
     showToast("Joined!", "success");
-    goToLobby(roomId);
-  } catch(e) { showToast("Failed: " + (e.reason || e.message), "error"); console.error(e); }
+    goToLobby(roomId, false);
+  } catch(e) { showToast("Failed: " + (e.reason || e.message || "Error"), "error"); console.error(e); }
 }
 
 // ─── LOBBY ────────────────────────────────────────────────────────────────────
-async function goToLobby(roomId) {
+async function goToLobby(roomId, isPrivate) {
   showScreen("lobbyScreen");
   document.getElementById("lobbyRoomId").textContent = roomId;
-  document.getElementById("lobbyInviteCode").textContent = "FOC" + roomId;
+  document.getElementById("lobbyInviteCode").textContent = isPrivate ? "FOC" + roomId : "Public Room";
   pollInterval = setInterval(() => pollLobby(roomId), 3000);
-  pollLobby(roomId);
+  await pollLobby(roomId);
 }
 
 async function pollLobby(roomId) {
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
-    currentRoom = room;
-    if (room.game_started) { clearInterval(pollInterval); goToGame(roomId); return; }
+    if (room.error) return;
+    // Update invite code from contract
+    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room";
+    if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
     document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
       <div class="player-item">
         <div class="player-dot"></div>
-        <div>${getDisplayName(p)}</div>
-        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="color:var(--accent2);font-size:12px">You</span>' : ""}
+        <span>${p.toLowerCase() === walletAddress?.toLowerCase() ? (username || "You") : shortAddr(p)}</span>
+        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="color:var(--accent2);font-size:11px;margin-left:auto">You</span>' : ""}
       </div>`).join("");
     const isHost = room.host.toLowerCase() === walletAddress?.toLowerCase();
-    const canStart = isHost && room.players.length >= 2;
+    const canStart = room.players.length >= 2;
     document.getElementById("lobbyStartBtn").innerHTML = isHost
       ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">
-          ${canStart ? "🚀 Start Game" : "Waiting for more players..."}
+          ${canStart ? "🚀 Start Game" : "Need at least 2 players..."}
          </button>`
-      : `<div class="status-msg pulse">Waiting for host to start...</div>`;
-  } catch(e) { console.error("pollLobby error:", e); }
+      : `<div class="status-msg pulse">Waiting for host to start the game...</div>`;
+  } catch(e) { console.error("Lobby poll error:", e); }
 }
 
 async function startGame(roomId) {
   try {
     showToast("Starting game...");
-    const tx = await contract.start_game(roomId, walletAddress);
+    const tx = await writeContract.start_game(roomId, walletAddress);
     await tx.wait();
-    showToast("Game started!", "success");
-  } catch(e) { showToast("Failed", "error"); console.error(e); }
+  } catch(e) { showToast("Failed to start", "error"); console.error(e); }
 }
 
 // ─── GAME ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
   showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
-  pollGame(roomId);
+  await pollGame(roomId);
 }
 
 async function pollGame(roomId) {
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
-    currentRoom = room;
-    if (room.game_finished) { clearInterval(pollInterval); showResults(room); return; }
+    if (room.error) return;
+    if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
     renderGame(room);
-  } catch(e) { console.error("pollGame error:", e); }
+  } catch(e) { console.error("Game poll error:", e); }
 }
 
 function renderGame(room) {
   const rnd = room.rounds[room.current_round - 1];
   if (!rnd) return;
-  const isMe = addr => addr?.toLowerCase() === walletAddress?.toLowerCase();
-  const isClaimer = isMe(rnd.claimer);
-  const hasVoted = rnd.votes && walletAddress && rnd.votes[walletAddress] !== undefined;
+  const isClaimer = rnd.claimer?.toLowerCase() === walletAddress?.toLowerCase();
+  const hasVoted = walletAddress && rnd.votes?.[walletAddress] !== undefined;
   const el = document.getElementById("gameContent");
+
   if (rnd.is_resolved) {
+    const v = rnd.verdict;
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Verdict</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      <div class="verdict-box ${rnd.verdict ? 'true' : 'false'}">
-        <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
+      <div class="verdict-box ${v?"true":"false"}">
+        <div class="verdict-label">${v ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
       </div>
-      <div class="status-msg pulse">Next round starting...</div>`;
+      <div class="status-msg pulse">Next round coming up...</div>`;
     return;
   }
+
   if (!rnd.claim_submitted) {
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Claiming Phase</div>
       ${isClaimer ? `
-        <div class="status-msg" style="color:var(--accent2);margin-bottom:16px">🎤 Your turn! Submit a claim.</div>
+        <div class="status-msg" style="color:var(--accent2);margin-bottom:16px;font-weight:600">🎤 It's your turn — submit a claim!</div>
         <div class="form-group">
-          <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px" />
+          <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px 16px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px" />
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
-      ` : `<div class="status-msg pulse">⏳ Waiting for ${getDisplayName(rnd.claimer)} to submit a claim...</div>`}`;
+      ` : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to submit a claim...</div>`}`;
     return;
   }
+
   if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
     el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Voting Phase</div>
+      <div class="round-badge">Round ${rnd.round_num} of ${room.total_rounds} — Vote Now!</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
       ${(hasVoted || isClaimer) ? `
-        <div class="status-msg pulse">✅ Vote submitted — waiting for others...</div>
-        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Reveal AI Verdict</button>
+        <div class="status-msg pulse">✅ ${isClaimer ? "You submitted this claim" : "Your vote is in"} — waiting for everyone...</div>
+        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>
       ` : `
-        <div class="timer-ring"><div class="timer-num ${timerSeconds<=10?'urgent':''}" id="timerDisplay">${timerSeconds}</div></div>
-        <p style="text-align:center;color:var(--muted);margin-bottom:8px">Is this claim true?</p>
+        <div class="timer-ring"><div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div></div>
+        <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this claim TRUE or FALSE?</p>
         <div class="vote-btns">
-          <button class="vote-btn fact" onclick="castVote('${room.id}', true)">✅<br>FACT</button>
-          <button class="vote-btn cap" onclick="castVote('${room.id}', false)">❌<br>CAP</button>
+          <button class="vote-btn fact" onclick="castVote('${room.id}',true)">✅<br><span style="font-size:14px">FACT</span></button>
+          <button class="vote-btn cap" onclick="castVote('${room.id}',false)">❌<br><span style="font-size:14px">CAP</span></button>
         </div>`}`;
   }
 }
@@ -461,7 +503,7 @@ function startTimer() {
   timerInterval = setInterval(() => {
     timerSeconds--;
     const el = document.getElementById("timerDisplay");
-    if (el) { el.textContent = timerSeconds; el.className = "timer-num" + (timerSeconds<=10?" urgent":""); }
+    if (el) { el.textContent = timerSeconds; el.className = "timer-num"+(timerSeconds<=10?" urgent":""); }
     if (timerSeconds <= 0) { clearInterval(timerInterval); timerInterval = null; }
   }, 1000);
 }
@@ -471,7 +513,7 @@ async function submitClaim(roomId) {
   if (!claim || claim.length < 10) return showToast("Claim must be at least 10 characters", "error");
   try {
     showToast("Submitting claim...");
-    const tx = await contract.submit_claim(roomId, walletAddress, claim);
+    const tx = await writeContract.submit_claim(roomId, walletAddress, claim);
     await tx.wait();
     showToast("Claim submitted!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
@@ -480,22 +522,23 @@ async function submitClaim(roomId) {
 async function castVote(roomId, isFact) {
   try {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-    showToast("Submitting vote...");
-    const tx = await contract.vote(roomId, walletAddress, isFact);
+    showToast(isFact ? "Voting FACT..." : "Voting CAP...");
+    const tx = await writeContract.vote(roomId, walletAddress, isFact);
     await tx.wait();
-    showToast("Vote cast!", "success");
+    showToast("Vote submitted!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 async function resolveRound(roomId) {
   try {
-    showToast("🤖 AI validators are thinking...");
-    const tx = await contract.resolve_round(roomId);
+    showToast("🤖 Asking AI validators...");
+    const tx = await writeContract.resolve_round(roomId);
     await tx.wait();
-    showToast("Verdict in!", "success");
+    showToast("Verdict revealed!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
 async function showResults(room) {
   showScreen("resultsScreen");
   const xpMap = {};
@@ -504,42 +547,22 @@ async function showResults(room) {
   } catch(e) { console.error(e); }
   document.getElementById("finalXpList").innerHTML = room.players.map(p => `
     <div class="xp-row">
-      <span>${getDisplayName(p)} ${p.toLowerCase()===walletAddress?.toLowerCase()?"(You)":""}</span>
-      <span class="xp-gain">${xpMap[p] || 0} XP total</span>
+      <span>${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||"You") : shortAddr(p)}</span>
+      <span class="xp-gain">${xpMap[p]||0} XP</span>
     </div>`).join("");
 }
 
-function shortAddr(addr) { return addr ? addr.slice(0,6)+"..."+addr.slice(-4) : ""; }
-function getDisplayName(addr) {
-  if (!addr) return "Unknown";
-  if (addr.toLowerCase() === walletAddress?.toLowerCase() && username) return username;
-  return shortAddr(addr);
-}
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function shortAddr(addr) { return addr ? addr.slice(0,6)+"..."+addr.slice(-4) : "?"; }
 function showToast(msg, type="") {
   const t = document.getElementById("toast");
   t.textContent = msg;
-  t.className = "toast show" + (type?" "+type:"");
-  setTimeout(() => t.className = "toast", 3000);
+  t.className = "toast show"+(type?" "+type:"");
+  setTimeout(()=>t.className="toast", 3000);
 }
 
+// Init
 updateUsernameDisplay();
 </script>
-
-<!-- Load genlayer-js as ES module for contract reads -->
-<script type="module">
-import { createClient, createAccount } from 'https://esm.sh/genlayer-js@latest';
-import { studionet } from 'https://esm.sh/genlayer-js@latest/chains';
-
-try {
-  const account = createAccount();
-  window.glClient = createClient({ chain: studionet, account });
-  console.log("genlayer-js loaded successfully");
-  loadLeaderboard();
-} catch(e) {
-  console.error("Failed to load genlayer-js:", e);
-  document.getElementById("leaderboardList").innerHTML = '<div class="status-msg">Could not load leaderboard</div>';
-}
-</script>
-
 </body>
 </html>
