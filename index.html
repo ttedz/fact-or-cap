@@ -276,7 +276,7 @@ async function connectWallet() {
         }]});
       }
     }
-    const accounts = await eth.request({ method: "eth_accounts" });
+    const accounts = await eth.request({ method: "eth_requestAccounts" });
     walletAddress = accounts[0];
 
     for (let i = 0; i < 80; i++) {
@@ -369,8 +369,11 @@ async function loadLeaderboard() {
 
 // ─── Create Room ──────────────────────────────────────────────────────────────
 async function createRoom() {
-  const roomId = document.getElementById("createRoomId").value.trim();
-  if (!roomId) return showToast("Enter a room ID", "error");
+  let roomId = document.getElementById("createRoomId").value.trim();
+  if (!roomId) {
+  roomId = Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById("createRoomId").value = roomId;
+  }
   const isPrivate = document.getElementById("createPrivate").value === "true";
   const maxPlayers = parseInt(document.getElementById("createMaxPlayers").value);
   const rounds = parseInt(document.getElementById("createRounds").value);
@@ -484,7 +487,8 @@ function renderGame(room) {
           <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/>
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
-      ` : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to submit a claim...</div>`}`;
+      ` : `<div class="status-msg pulse">⏳ ${shortAddr(rnd.claimer)} is thinking of a claim...</div>
+            <div style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center">You'll vote once they submit</div>`}`;
     return;
   }
 
@@ -531,6 +535,8 @@ async function submitClaim(roomId) {
 async function castVote(roomId, isFact) {
   try {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    const timerEl = document.getElementById("timerDisplay");
+    if (timerEl) timerEl.textContent = "✅";
     showToast(isFact ? "Voting FACT..." : "Voting CAP...");
     await glWrite("vote", [roomId, walletAddress, isFact]);
     showToast("Vote in!", "success");
@@ -539,12 +545,19 @@ async function castVote(roomId, isFact) {
 }
 
 async function resolveRound(roomId) {
-  try {
-    showToast("🤖 AI validators deciding...");
-    await glWrite("resolve_round", [roomId]);
-    showToast("Verdict revealed!", "success");
-    pollGame(roomId);
-  } catch(e) { showToast("Failed", "error"); console.error(e); }
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      showToast("🤖 AI validators deciding... (attempt " + attempt + "/3)");
+      await glWrite("resolve_round", [roomId]);
+      showToast("Verdict revealed!", "success");
+      pollGame(roomId);
+      return;
+    } catch(e) {
+      console.error("Attempt " + attempt + " failed:", e);
+      if (attempt === 3) showToast("Failed after 3 attempts — try again", "error");
+      else await new Promise(r => setTimeout(r, 2000));
+    }
+  }
 }
 
 async function showResults(room) {
