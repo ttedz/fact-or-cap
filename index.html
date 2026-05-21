@@ -498,8 +498,15 @@ function renderGame(room) {
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Vote!</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
       ${(hasVoted || isClaimer) ? `
-        <div class="status-msg pulse">✅ ${isClaimer ? "You made this claim" : "Vote submitted!"} Waiting for others...</div>
-        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>
+  ${(() => {
+    const nonClaimers = room.players.length - 1;
+    const votesIn = Object.keys(rnd.votes || {}).length;
+    const allVoted = votesIn >= nonClaimers;
+    return allVoted
+      ? `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
+         <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+      : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>`;
+  })()}
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
