@@ -534,6 +534,7 @@ async function castVote(roomId, isFact) {
     showToast(isFact ? "Voting FACT..." : "Voting CAP...");
     await glWrite("vote", [roomId, walletAddress, isFact]);
     showToast("Vote in!", "success");
+    pollGame(roomId);
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
@@ -542,6 +543,7 @@ async function resolveRound(roomId) {
     showToast("🤖 AI validators deciding...");
     await glWrite("resolve_round", [roomId]);
     showToast("Verdict revealed!", "success");
+    pollGame(roomId);
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
