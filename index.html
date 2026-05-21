@@ -211,40 +211,32 @@
 </div>
 
 <script type="module">
-// Load genlayer-js for reads
 import { createClient } from 'https://esm.sh/genlayer-js@1.1.7';
 import { studionet } from 'https://esm.sh/genlayer-js@1.1.7/chains';
 
-try {
-  window._gl = createClient({ chain: studionet });
-  console.log('genlayer-js read client ready');
-  // If wallet already connected, reload leaderboard
-  if (window.walletAddress) window.loadLeaderboard();
-} catch(e) {
-  console.error('genlayer-js failed to load:', e);
-  window._gl = null;
-}
+window._createClient = createClient;
+window._studionet = studionet;
+window._gl = createClient({ chain: studionet });
+console.log('genlayer-js ready');
 </script>
 
 <script>
-const CONTRACT = "0xdB35Cdd000ee5E3653feB33C606a0f77bF836dA2";
+const CONTRACT = "0xdE5528B07803BC7fEddD2c7AB6FE0F6Af84f0784";
 
-// ─── State ───────────────────────────────────────────────────────────────────
 let walletAddress = null;
-let writeClient = null; // ethers signer contract
+let writeClient = null;
 let pollInterval = null;
 let timerInterval = null;
 let timerSeconds = 30;
 let username = localStorage.getItem("foc_username") || "";
 
-// ─── Read via genlayer-js ────────────────────────────────────────────────────
+// ─── Read ─────────────────────────────────────────────────────────────────────
 async function glRead(method, args = []) {
-  // Wait up to 8 seconds for genlayer-js to load
   for (let i = 0; i < 80; i++) {
-    if (window._gl !== undefined) break;
+    if (window._gl) break;
     await new Promise(r => setTimeout(r, 100));
   }
-  if (!window._gl) throw new Error("genlayer-js unavailable");
+  if (!window._gl) throw new Error("genlayer-js not ready");
   return await window._gl.readContract({
     address: CONTRACT,
     functionName: method,
@@ -252,14 +244,25 @@ async function glRead(method, args = []) {
   });
 }
 
-// ─── Wallet ──────────────────────────────────────────────────────────────────
+// ─── Write ────────────────────────────────────────────────────────────────────
+async function glWrite(method, args) {
+  const tx = await writeClient.writeContract({
+    address: CONTRACT,
+    functionName: method,
+    args: args,
+    value: BigInt(0)
+  });
+  await window._gl.waitForTransactionReceipt({ hash: tx, status: "FINALIZED" });
+  return tx;
+}
+
+// ─── Wallet ───────────────────────────────────────────────────────────────────
 async function connectWallet() {
   let eth = window.ethereum;
   if (window.ethereum?.providers) eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
   if (!eth) return showToast("Please install MetaMask", "error");
   try {
     await eth.request({ method: "eth_requestAccounts" });
-    // Switch to GenLayer Studionet
     try {
       await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xF22F" }] });
     } catch(se) {
@@ -276,19 +279,16 @@ async function connectWallet() {
     const accounts = await eth.request({ method: "eth_accounts" });
     walletAddress = accounts[0];
 
-    // Setup write contract via ethers
-    const { ethers } = await import('https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js');
-    const provider = new ethers.BrowserProvider(eth);
-    const signer = await provider.getSigner();
-    const ABI = [
-      "function create_room(string,string,bool,uint8,uint8) returns (string)",
-      "function join_room(string,string,string) returns (string)",
-      "function start_game(string,string) returns (string)",
-      "function submit_claim(string,string,string) returns (string)",
-      "function vote(string,string,bool) returns (string)",
-      "function resolve_round(string) returns (string)"
-    ];
-    writeClient = new ethers.Contract(CONTRACT, ABI, signer);
+    for (let i = 0; i < 80; i++) {
+      if (window._createClient) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    writeClient = window._createClient({
+      chain: window._studionet,
+      account: walletAddress,
+      provider: eth
+    });
 
     const btn = document.getElementById("walletBtn");
     btn.textContent = shortAddr(walletAddress);
@@ -298,7 +298,7 @@ async function connectWallet() {
     loadLeaderboard();
     showToast("Connected to GenLayer Studionet ✅", "success");
   } catch(e) {
-    showToast("Failed to connect: " + (e.message||"error"), "error");
+    showToast("Failed: " + (e.message || "error"), "error");
     console.error(e);
   }
 }
@@ -320,7 +320,7 @@ function requireWallet(screen) {
   showScreen(screen);
 }
 
-// ─── Username ────────────────────────────────────────────────────────────────
+// ─── Username ─────────────────────────────────────────────────────────────────
 function showUsernameModal() {
   document.getElementById("usernameInput").value = username || "";
   document.getElementById("usernameModal").classList.add("active");
@@ -332,13 +332,13 @@ function saveUsername() {
   localStorage.setItem("foc_username", username);
   document.getElementById("usernameModal").classList.remove("active");
   updateUsernameDisplay();
-  showToast("Username set: " + username, "success");
+  showToast("Username set!", "success");
 }
 function updateUsernameDisplay() {
   document.getElementById("usernameDisplay").textContent = username && walletAddress ? "👤 " + username : "";
 }
 
-// ─── Screens ─────────────────────────────────────────────────────────────────
+// ─── Screens ──────────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -346,7 +346,7 @@ function showScreen(id) {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 }
 
-// ─── Leaderboard ─────────────────────────────────────────────────────────────
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
 async function loadLeaderboard() {
   const el = document.getElementById("leaderboardList");
   el.innerHTML = '<div class="status-msg pulse">Loading...</div>';
@@ -366,7 +366,6 @@ async function loadLeaderboard() {
     console.error("LB:", e);
   }
 }
-window.loadLeaderboard = loadLeaderboard;
 
 // ─── Create Room ──────────────────────────────────────────────────────────────
 async function createRoom() {
@@ -376,12 +375,11 @@ async function createRoom() {
   const maxPlayers = parseInt(document.getElementById("createMaxPlayers").value);
   const rounds = parseInt(document.getElementById("createRounds").value);
   try {
-    showToast("Creating room...");
-    const tx = await writeClient.create_room(roomId, walletAddress, isPrivate, maxPlayers, rounds);
-    await tx.wait();
+    showToast("Creating room on GenLayer...");
+    await glWrite("create_room", [roomId, walletAddress, isPrivate, maxPlayers, rounds]);
     showToast("Room created!", "success");
     goToLobby(roomId);
-  } catch(e) { showToast("Error: " + (e.reason||e.message||"failed"), "error"); console.error(e); }
+  } catch(e) { showToast("Failed: " + (e.message||"error"), "error"); console.error(e); }
 }
 
 // ─── Join Room ────────────────────────────────────────────────────────────────
@@ -391,22 +389,54 @@ async function joinRoom() {
   if (!roomId) return showToast("Enter a room ID", "error");
   try {
     showToast("Joining room...");
-    const tx = await writeClient.join_room(roomId, walletAddress, code);
-    await tx.wait();
+    await glWrite("join_room", [roomId, walletAddress, code]);
     showToast("Joined!", "success");
     goToLobby(roomId);
-  } catch(e) { showToast("Error: " + (e.reason||e.message||"failed"), "error"); console.error(e); }
+  } catch(e) { showToast("Failed: " + (e.message||"error"), "error"); console.error(e); }
 }
 
 // ─── Lobby ────────────────────────────────────────────────────────────────────
 async function goToLobby(roomId) {
   showScreen("lobbyScreen");
   document.getElementById("lobbyRoomId").textContent = roomId;
-  document.getElementById("lobbyInviteCode").textContent = "Confirming on blockchain...";
-  // Wait 5 seconds for GenLayer to finalize the transaction
-  await new Promise(r => setTimeout(r, 15000));
+  document.getElementById("lobbyInviteCode").textContent = "Loading...";
   pollInterval = setInterval(() => pollLobby(roomId), 3000);
   pollLobby(roomId);
+}
+
+async function pollLobby(roomId) {
+  try {
+    const raw = await glRead("get_room", [roomId]);
+    const room = JSON.parse(raw);
+    if (room.error) {
+      document.getElementById("lobbyInviteCode").textContent = "Confirming on blockchain...";
+      document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Waiting for GenLayer to confirm...</div>';
+      return;
+    }
+    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room";
+    if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
+    document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
+      <div class="player-item">
+        <div class="player-dot"></div>
+        <span>${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : shortAddr(p)}</span>
+        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="margin-left:auto;font-size:11px;color:var(--accent2)">You</span>' : ""}
+      </div>`).join("");
+    const isHost = room.host?.toLowerCase() === walletAddress?.toLowerCase();
+    const canStart = room.players.length >= 2;
+    document.getElementById("lobbyStartBtn").innerHTML = isHost
+      ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">
+           ${canStart ? "🚀 Start Game!" : "Waiting for more players..."}
+         </button>`
+      : `<div class="status-msg pulse">Waiting for host to start...</div>`;
+  } catch(e) { console.error("Lobby poll:", e); }
+}
+
+async function startGame(roomId) {
+  try {
+    showToast("Starting...");
+    await glWrite("start_game", [roomId, walletAddress]);
+    showToast("Game started!", "success");
+  } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
 // ─── Game ─────────────────────────────────────────────────────────────────────
@@ -492,8 +522,7 @@ async function submitClaim(roomId) {
   if (!claim || claim.length < 10) return showToast("Claim needs 10+ characters", "error");
   try {
     showToast("Submitting...");
-    const tx = await writeClient.submit_claim(roomId, walletAddress, claim);
-    await tx.wait();
+    await glWrite("submit_claim", [roomId, walletAddress, claim]);
     showToast("Claim submitted!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
@@ -502,8 +531,7 @@ async function castVote(roomId, isFact) {
   try {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     showToast(isFact ? "Voting FACT..." : "Voting CAP...");
-    const tx = await writeClient.vote(roomId, walletAddress, isFact);
-    await tx.wait();
+    await glWrite("vote", [roomId, walletAddress, isFact]);
     showToast("Vote in!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
@@ -511,8 +539,7 @@ async function castVote(roomId, isFact) {
 async function resolveRound(roomId) {
   try {
     showToast("🤖 AI validators deciding...");
-    const tx = await writeClient.resolve_round(roomId);
-    await tx.wait();
+    await glWrite("resolve_round", [roomId]);
     showToast("Verdict revealed!", "success");
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
@@ -538,8 +565,6 @@ function showToast(msg, type="") {
   setTimeout(()=>t.className="toast", 3000);
 }
 
-// expose for module script
-window.walletAddress = null;
 updateUsernameDisplay();
 </script>
 </body>
