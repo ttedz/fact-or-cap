@@ -504,7 +504,7 @@ function renderGame(room) {
 
   if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
-    const nonClaimers = room.players.length - 1;
+    const nonClaimers = room.players.filter(p => p.toLowerCase() !== rnd.claimer?.toLowerCase()).length;
     const votesIn = Object.keys(rnd.votes || {}).length;
     const allVoted = votesIn >= nonClaimers;
     el.innerHTML = `
@@ -522,14 +522,49 @@ function renderGame(room) {
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
-        <div class="vote-btns">
-          <button class="vote-btn fact" onclick="castVote('${room.id}',true)">FACT</button>
-          <button class="vote-btn cap" onclick="castVote('${room.id}',false)">CAP</button>
-        </div>
+<div id="voteSelection">
+  <div class="vote-btns">
+    <button class="vote-btn fact" id="voteFactBtn" onclick="selectVote(true)">✅ FACT</button>
+    <button class="vote-btn cap" id="voteCapBtn" onclick="selectVote(false)">❌ CAP</button>
+  </div>
+  <div id="voteConfirmArea" style="display:none;margin-top:16px;text-align:center">
+    <div id="voteSelectedLabel" style="font-size:18px;font-weight:700;margin-bottom:12px"></div>
+    <button class="btn btn-primary btn-lg" style="width:100%" onclick="confirmVote('${room.id}')">Confirm Vote</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="cancelVote()">Change my mind</button>
+  </div>
+</div>
       `}`;
   }
 }
+let selectedVote = null;
 
+function selectVote(isFact) {
+  selectedVote = isFact;
+  const factBtn = document.getElementById("voteFactBtn");
+  const capBtn = document.getElementById("voteCapBtn");
+  const confirmArea = document.getElementById("voteConfirmArea");
+  const label = document.getElementById("voteSelectedLabel");
+  if (factBtn) factBtn.style.opacity = isFact ? "1" : "0.4";
+  if (capBtn) capBtn.style.opacity = !isFact ? "1" : "0.4";
+  if (confirmArea) confirmArea.style.display = "block";
+  if (label) label.textContent = isFact ? "You selected: ✅ FACT" : "You selected: ❌ CAP";
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function cancelVote() {
+  selectedVote = null;
+  const factBtn = document.getElementById("voteFactBtn");
+  const capBtn = document.getElementById("voteCapBtn");
+  const confirmArea = document.getElementById("voteConfirmArea");
+  if (factBtn) factBtn.style.opacity = "1";
+  if (capBtn) capBtn.style.opacity = "1";
+  if (confirmArea) confirmArea.style.display = "none";
+}
+
+async function confirmVote(roomId) {
+  if (selectedVote === null) return;
+  await castVote(roomId, selectedVote);
+}
 function startTimer() {
   timerSeconds = 30;
   if (timerInterval) clearInterval(timerInterval);
