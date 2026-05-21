@@ -442,7 +442,7 @@ async function startGame(roomId) {
 // ─── Game ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
   showScreen("gameScreen");
-  pollInterval = setInterval(() => {   const claimInput = document.getElementById("claimInput");   if (!claimInput) pollGame(roomId); }, 3000);
+  pollInterval = setInterval(() => {   const claimInput = document.getElementById("claimInput");   if (!claimInput || document.activeElement !== claimInput) pollGame(roomId); }, 3000);
   pollGame(roomId);
 }
 
@@ -524,6 +524,7 @@ async function submitClaim(roomId) {
     showToast("Submitting...");
     await glWrite("submit_claim", [roomId, walletAddress, claim]);
     showToast("Claim submitted!", "success");
+    pollGame(roomId);
   } catch(e) { showToast("Failed", "error"); console.error(e); }
 }
 
