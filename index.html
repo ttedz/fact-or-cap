@@ -478,7 +478,8 @@ function renderGame(room) {
         <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
       </div>
-      <div class="status-msg pulse" id="nextRoundTimer">Moving to next round in 8 seconds...</div>`; setTimeout(() => { if(pollInterval) pollGame(roomId); }, 8000);
+      <div class="status-msg pulse">Moving to next round in 8 seconds...</div>`;
+    setTimeout(() => { if(pollInterval) pollGame(room.id); }, 8000);
     return;
   }
 
@@ -491,37 +492,41 @@ function renderGame(room) {
           <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/>
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
-      ` : `<div style="text-align:center;padding:40px 20px">
-  <div style="font-size:36px;margin-bottom:12px">⏳</div>
-  <div style="font-size:18px;font-weight:600;margin-bottom:8px">${shortAddr(rnd.claimer)} is writing a claim...</div>
-  <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
-</div>
+      ` : `
+        <div style="text-align:center;padding:40px 20px">
+          <div style="font-size:36px;margin-bottom:12px">⏳</div>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px">${shortAddr(rnd.claimer)} is writing a claim...</div>
+          <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
+        </div>
+      `}`;
     return;
   }
 
   if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
+    const nonClaimers = room.players.length - 1;
+    const votesIn = Object.keys(rnd.votes || {}).length;
+    const allVoted = votesIn >= nonClaimers;
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Vote!</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
       ${(hasVoted || isClaimer) ? `
-  ${(() => {
-    const nonClaimers = room.players.length - 1;
-    const votesIn = Object.keys(rnd.votes || {}).length;
-    const allVoted = votesIn >= nonClaimers;
-    return allVoted
-  ? `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
-     <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
-  : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>`;
-      : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>`;
-  })()}
+        ${allVoted
+          ? `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
+             <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+          : `<div class="status-msg pulse">${isClaimer
+              ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")"
+              : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"
+            }</div>`
+        }
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
         <div class="vote-btns">
           <button class="vote-btn fact" onclick="castVote('${room.id}',true)">FACT</button>
           <button class="vote-btn cap" onclick="castVote('${room.id}',false)">CAP</button>
-        </div>`}`;
+        </div>
+      `}`;
   }
 }
 
