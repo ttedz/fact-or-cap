@@ -510,8 +510,9 @@ function renderGame(room) {
     const votesIn = Object.keys(rnd.votes || {}).length;
     const allVoted = votesIn >= nonClaimers;
     return allVoted
-    return `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
-  <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`;
+  ? `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
+     <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+  : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>`;
       : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>`;
   })()}
       ` : `
