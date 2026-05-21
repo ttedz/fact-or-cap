@@ -183,8 +183,10 @@
       <div class="invite-box">
         <div style="font-size:13px;color:var(--muted);margin-bottom:4px">ROOM ID</div>
         <div style="font-size:24px;font-weight:800" id="lobbyRoomId"></div>
+        <div id="lobbyInviteCodeSection">
         <div style="font-size:13px;color:var(--muted);margin:12px 0 4px">INVITE CODE</div>
         <div class="invite-code" id="lobbyInviteCode">...</div>
+        </div>
       </div>
       <div class="player-list" id="lobbyPlayers"></div>
       <div id="lobbyStartBtn" style="margin-top:16px"></div>
@@ -417,7 +419,7 @@ async function pollLobby(roomId) {
       document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Waiting for GenLayer to confirm...</div>';
       return;
     }
-    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "Public Room";
+    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "No code needed — public room";
     if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
     document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
       <div class="player-item">
@@ -489,8 +491,11 @@ function renderGame(room) {
           <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/>
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
-      ` : `<div class="status-msg pulse">⏳ ${shortAddr(rnd.claimer)} is thinking of a claim...</div>
-            <div style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center">You'll vote once they submit</div>`}`;
+      ` : `<div style="text-align:center;padding:40px 20px">
+  <div style="font-size:36px;margin-bottom:12px">⏳</div>
+  <div style="font-size:18px;font-weight:600;margin-bottom:8px">${shortAddr(rnd.claimer)} is writing a claim...</div>
+  <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
+</div>
     return;
   }
 
@@ -505,16 +510,16 @@ function renderGame(room) {
     const votesIn = Object.keys(rnd.votes || {}).length;
     const allVoted = votesIn >= nonClaimers;
     return allVoted
-      ? `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
-         <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+    return `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
+  <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`;
       : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>`;
   })()}
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
         <div class="vote-btns">
-          <button class="vote-btn fact" onclick="castVote('${room.id}',true)">✅<br><span style="font-size:14px">FACT</span></button>
-          <button class="vote-btn cap" onclick="castVote('${room.id}',false)">❌<br><span style="font-size:14px">CAP</span></button>
+          <button class="vote-btn fact" onclick="castVote('${room.id}',true)">FACT</button>
+          <button class="vote-btn cap" onclick="castVote('${room.id}',false)">CAP</button>
         </div>`}`;
   }
 }
@@ -556,16 +561,20 @@ async function castVote(roomId, isFact) {
 }
 
 async function resolveRound(roomId) {
-  const btn = document.querySelector(`button[onclick="resolveRound('${roomId}')"]`);
-  if (btn) { btn.disabled = true; btn.textContent = "🤖 AI validators thinking..."; }
+  document.getElementById("gameContent").innerHTML = `
+    <div style="text-align:center;padding:60px 20px">
+      <div style="font-size:48px;margin-bottom:16px">🤖</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:8px">AI Validators are deciding...</div>
+      <div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div>
+      <div style="margin-top:24px;color:var(--muted);font-size:13px">This may take 15-30 seconds</div>
+    </div>`;
   try {
-    showToast("🤖 AI validators deciding...");
     await glWrite("resolve_round", [roomId]);
     showToast("Verdict revealed!", "success");
     pollGame(roomId);
   } catch(e) {
     showToast("Failed — tap again to retry", "error");
-    if (btn) { btn.disabled = false; btn.textContent = "🤖 Ask AI for Verdict"; }
+    pollGame(roomId);
     console.error(e);
   }
 }
