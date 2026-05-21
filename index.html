@@ -252,7 +252,7 @@ async function glWrite(method, args) {
     args: args,
     value: BigInt(0)
   });
-  await window._gl.waitForTransactionReceipt({ hash: tx, status: "FINALIZED" });
+  await window._gl.waitForTransactionReceipt({ hash: tx, status: "ACCEPTED" });
   return tx;
 }
 
@@ -442,7 +442,7 @@ async function startGame(roomId) {
 // ─── Game ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
   showScreen("gameScreen");
-  pollInterval = setInterval(() => pollGame(roomId), 3000);
+  pollInterval = setInterval(() => {   const claimInput = document.getElementById("claimInput");   if (!claimInput) pollGame(roomId); }, 3000);
   pollGame(roomId);
 }
 
