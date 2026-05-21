@@ -228,6 +228,7 @@ let writeClient = null;
 let pollInterval = null;
 let timerInterval = null;
 let timerSeconds = 30;
+let txPending = false;
 let username = localStorage.getItem("foc_username") || "";
 
 // ─── Read ─────────────────────────────────────────────────────────────────────
@@ -450,6 +451,7 @@ async function goToGame(roomId) {
 }
 
 async function pollGame(roomId) {
+  if (txPending) return;
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
@@ -541,32 +543,32 @@ async function submitClaim(roomId) {
 
 async function castVote(roomId, isFact) {
   try {
+    txPending = true;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     const timerEl = document.getElementById("timerDisplay");
     if (timerEl) timerEl.textContent = "✅";
     showToast(isFact ? "Voting FACT..." : "Voting CAP...");
     await glWrite("vote", [roomId, walletAddress, isFact]);
-    showToast("Vote in!", "success");
+    showToast("Vote in!", "success"); 
+    txPending = false;
     pollGame(roomId);
-  } catch(e) { showToast("Failed", "error"); console.error(e); }
+  } catch(e) { showToast("Failed", "error"); console.error(e); txPending = false; }
 }
 
 async function resolveRound(roomId) {
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      showToast("🤖 AI validators deciding... (attempt " + attempt + "/3)");
-      await glWrite("resolve_round", [roomId]);
-      showToast("Verdict revealed!", "success");
-      pollGame(roomId);
-      return;
-    } catch(e) {
-      console.error("Attempt " + attempt + " failed:", e);
-      if (attempt === 3) showToast("Failed after 3 attempts — try again", "error");
-      else await new Promise(r => setTimeout(r, 2000));
-    }
+  const btn = document.querySelector(`button[onclick="resolveRound('${roomId}')"]`);
+  if (btn) { btn.disabled = true; btn.textContent = "🤖 AI validators thinking..."; }
+  try {
+    showToast("🤖 AI validators deciding...");
+    await glWrite("resolve_round", [roomId]);
+    showToast("Verdict revealed!", "success");
+    pollGame(roomId);
+  } catch(e) {
+    showToast("Failed — tap again to retry", "error");
+    if (btn) { btn.disabled = false; btn.textContent = "🤖 Ask AI for Verdict"; }
+    console.error(e);
   }
 }
-
 async function showResults(room) {
   showScreen("resultsScreen");
   const xpMap = {};
