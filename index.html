@@ -168,7 +168,7 @@
       </div>
       <div class="form-group">
         <label>Invite Code (private rooms only)</label>
-        <input type="text" id="joinInviteCode" placeholder="Leave empty for public rooms" />
+        <input type="text" id="joinInviteCode" placeholder="Only needed for private rooms" />
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="joinRoom()">Join Room</button>
     </div>
@@ -471,7 +471,7 @@ function renderGame(room) {
         <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
       </div>
-      <div class="status-msg pulse">Next round coming up...</div>`;
+      <div class="status-msg pulse" id="nextRoundTimer">Moving to next round in 8 seconds...</div>`; setTimeout(() => { if(pollInterval) pollGame(roomId); }, 8000);
     return;
   }
 
@@ -555,7 +555,7 @@ async function showResults(room) {
   } catch(e) { console.error(e); }
   document.getElementById("finalXpList").innerHTML = room.players.map(p => `
     <div class="xp-row">
-      <span>${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||"You") : shortAddr(p)}</span>
+      <span>${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||shortAddr(p)) : shortAddr(p)}</span>
       <span class="xp-gain">${xpMap[p]||0} XP</span>
     </div>`).join("");
 }
