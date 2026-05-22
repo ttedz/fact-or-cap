@@ -742,24 +742,24 @@ async function resolveRound(roomId) {
       <div class="subtitle">This may take 15-30 seconds</div>
     </div>`;
   try {
-     await glWrite("resolve_round", [roomId]);
-    txPending = false;
-    showToast("Verdict revealed!", "success", true);
-    await new Promise(r => setTimeout(r, 3000));
-    await pollGame(roomId);
-    setTimeout(() => {
+      await glWrite("resolve_round", [roomId]);
+      txPending = false;
+      showToast("Verdict revealed!", "success", true);
+      const raw = await glRead("get_room", [roomId]);
+      const room = JSON.parse(raw);
+      renderGame(room);
+      setTimeout(() => {
+        if (!pollInterval && currentRoomId) {
+          pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+        }
+      }, 10000);
+    } catch(e) {
+      txPending = false;
+      selectedVote = null;
+      showToast("Failed — tap again to retry", "error");
       pollGame(roomId);
-      if (!pollInterval && currentRoomId) {
-        pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-      }
-    }, 12000);
-  } catch(e) {
-    txPending = false;
-    selectedVote = null;
-    showToast("Failed — tap again to retry", "error");
-    pollGame(roomId);
-    console.error(e);
-  }
+      console.error(e);
+    }
 }
 // ─── Timer ────────────────────────────────────────────────────────────────────
 function startTimer() {
