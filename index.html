@@ -14,7 +14,7 @@
     }
     body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
     nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
-    .logo { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; }
     .nav-right { display: flex; align-items: center; gap: 12px; }
     .btn { padding: 10px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
@@ -34,56 +34,66 @@
     .container { max-width: 800px; margin: 0 auto; padding: 32px; }
     .leaderboard { max-width: 600px; margin: 0 auto; padding: 0 32px 60px; }
     .leaderboard h2 { text-align: center; margin-bottom: 20px; font-size: 22px; }
-    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); }
+    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); transition: border-color 0.2s; }
+    .lb-row:hover { border-color: var(--accent); }
     .lb-rank { font-size: 18px; width: 32px; }
     .lb-player { flex: 1; padding: 0 12px; font-size: 14px; color: var(--muted); }
     .lb-xp { font-weight: 700; color: var(--accent2); }
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
-    .form-group input, .form-group select { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+    .form-group input, .form-group select { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
     .player-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
     .player-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 14px; }
-    .player-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .player-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
     .invite-box { background: var(--surface2); border: 1px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0; }
     .invite-code { font-size: 26px; font-weight: 900; letter-spacing: 3px; color: var(--accent2); }
     .round-badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 16px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
     .claim-box { background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius); padding: 32px; text-align: center; margin: 24px 0; }
     .claim-text { font-size: 22px; font-weight: 700; line-height: 1.4; }
     .vote-btns { display: flex; gap: 16px; justify-content: center; margin: 24px 0; }
-    .vote-btn { flex: 1; max-width: 200px; padding: 20px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 20px; font-weight: 800; background: var(--surface2); color: var(--text); transition: all 0.2s; }
+    .vote-btn { flex: 1; max-width: 200px; padding: 20px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 18px; font-weight: 800; background: var(--surface2); color: var(--text); transition: all 0.2s; }
     .vote-btn.fact { border-color: var(--green); }
-    .vote-btn.fact:hover { background: var(--green); color: white; }
+    .vote-btn.fact:hover, .vote-btn.fact.selected { background: var(--green); color: white; }
     .vote-btn.cap { border-color: var(--red); }
-    .vote-btn.cap:hover { background: var(--red); color: white; }
-    .timer-num { font-size: 48px; font-weight: 900; color: var(--accent2); text-align: center; margin: 16px 0; }
-    .timer-num.urgent { color: var(--red); }
+    .vote-btn.cap:hover, .vote-btn.cap.selected { background: var(--red); color: white; }
+    .timer-num { font-size: 56px; font-weight: 900; color: var(--accent2); text-align: center; margin: 16px 0; }
+    .timer-num.urgent { color: var(--red); animation: pulse 0.5s infinite; }
     .verdict-box { text-align: center; padding: 40px; border-radius: var(--radius); margin: 24px 0; }
     .verdict-box.true { background: #0a2a0a; border: 2px solid var(--green); }
     .verdict-box.false { background: #2a0a0a; border: 2px solid var(--red); }
     .verdict-label { font-size: 48px; font-weight: 900; margin-bottom: 12px; }
-    .verdict-reasoning { font-size: 15px; color: var(--muted); font-style: italic; }
+    .verdict-reasoning { font-size: 15px; color: var(--muted); font-style: italic; line-height: 1.6; }
     .xp-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
-    .xp-row { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 14px; }
-    .xp-gain { color: var(--green); font-weight: 700; }
+    .xp-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--surface2); border-radius: 8px; font-size: 14px; }
+    .xp-gain { color: var(--green); font-weight: 700; font-size: 16px; }
     .status-msg { text-align: center; padding: 20px; color: var(--muted); font-size: 15px; }
     .pulse { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .loading-screen { text-align: center; padding: 60px 20px; }
+    .loading-screen .icon { font-size: 56px; margin-bottom: 16px; }
+    .loading-screen .title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .loading-screen .subtitle { color: var(--muted); font-size: 14px; margin-top: 8px; }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
     .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; width: 90%; max-width: 400px; }
-    .modal h3 { margin-bottom: 20px; }
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 14px; z-index: 300; transform: translateY(100px); transition: transform 0.3s; }
+    .modal h3 { margin-bottom: 20px; font-size: 20px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 14px; z-index: 300; transform: translateY(100px); transition: transform 0.3s; max-width: 300px; }
     .toast.show { transform: translateY(0); }
     .toast.success { border-color: var(--green); color: var(--green); }
     .toast.error { border-color: var(--red); color: var(--red); }
-    @media(max-width:600px) { .hero h1 { font-size: 36px; } nav { padding: 12px 16px; } .container { padding: 16px; } }
+    .history-box { background: var(--surface2); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+    .history-box h4 { font-size: 13px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .history-item:last-child { border-bottom: none; }
+    @media(max-width:600px) { .hero h1 { font-size: 36px; } nav { padding: 12px 16px; } .container { padding: 16px; } .vote-btn { padding: 16px; font-size: 16px; } }
   </style>
 </head>
 <body>
 
 <div class="modal-overlay" id="usernameModal">
   <div class="modal">
-    <h3>Choose a username</h3>
+    <h3>👤 Choose a username</h3>
     <div class="form-group">
       <label>Display name shown to other players</label>
       <input type="text" id="usernameInput" placeholder="e.g. FactMaster99" maxlength="20" />
@@ -95,7 +105,7 @@
 <div class="toast" id="toast"></div>
 
 <nav>
-  <div class="logo" onclick="showScreen('homeScreen')" style="cursor:pointer">Fact or Cap</div>
+  <div class="logo" onclick="showScreen('homeScreen')">Fact or Cap</div>
   <div class="nav-right">
     <span id="usernameDisplay" style="font-size:13px;color:var(--muted);cursor:pointer" onclick="showUsernameModal()"></span>
     <button class="btn btn-outline" id="walletBtn" onclick="connectWallet()">Connect Wallet</button>
@@ -109,8 +119,8 @@
     <h1>Fact or Cap? 🎯</h1>
     <p>Submit claims. Vote. Let AI validators on GenLayer decide the truth.</p>
     <div class="hero-btns">
-      <button class="btn btn-primary btn-lg" onclick="requireWallet('createScreen')">Create Room</button>
-      <button class="btn btn-outline btn-lg" onclick="requireWallet('joinScreen')">Join Room</button>
+      <button class="btn btn-primary btn-lg" onclick="requireWallet('createScreen')">🎮 Create Room</button>
+      <button class="btn btn-outline btn-lg" onclick="requireWallet('joinScreen')">🚪 Join Room</button>
     </div>
   </div>
   <div class="leaderboard">
@@ -123,16 +133,16 @@
   <div class="container">
     <button class="btn btn-outline" style="margin-bottom:24px" onclick="showScreen('homeScreen')">← Back</button>
     <div class="card">
-      <h2 style="margin-bottom:24px">Create a Room</h2>
+      <h2 style="margin-bottom:24px">🎮 Create a Room</h2>
       <div class="form-group">
-        <label>Room ID — friends need this to join</label>
-        <input type="text" id="createRoomId" placeholder="e.g. pizza42" />
+        <label>Room ID — friends need this to join (or leave empty for random)</label>
+        <input type="text" id="createRoomId" placeholder="e.g. pizza42 or leave empty" />
       </div>
       <div class="form-group">
         <label>Room Type</label>
         <select id="createPrivate">
-          <option value="false">Public — anyone can join</option>
-          <option value="true">Private — invite code required</option>
+          <option value="false">🌍 Public — anyone can join</option>
+          <option value="true">🔒 Private — invite code required</option>
         </select>
       </div>
       <div class="form-group">
@@ -147,9 +157,9 @@
       <div class="form-group">
         <label>Rounds</label>
         <select id="createRounds">
-          <option value="3">3 rounds</option>
-          <option value="5">5 rounds</option>
-          <option value="7">7 rounds</option>
+          <option value="3">3 rounds (~10 min)</option>
+          <option value="5">5 rounds (~15 min)</option>
+          <option value="7">7 rounds (~20 min)</option>
         </select>
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="createRoom()">Create Room</button>
@@ -161,14 +171,14 @@
   <div class="container">
     <button class="btn btn-outline" style="margin-bottom:24px" onclick="showScreen('homeScreen')">← Back</button>
     <div class="card">
-      <h2 style="margin-bottom:24px">Join a Room</h2>
+      <h2 style="margin-bottom:24px">🚪 Join a Room</h2>
       <div class="form-group">
         <label>Room ID</label>
         <input type="text" id="joinRoomId" placeholder="Ask the host for the Room ID" />
       </div>
       <div class="form-group">
         <label>Invite Code (private rooms only)</label>
-        <input type="text" id="joinInviteCode" placeholder="Only needed for private rooms" />
+        <input type="text" id="joinInviteCode" placeholder="Leave empty for public rooms" />
       </div>
       <button class="btn btn-primary btn-lg" style="width:100%" onclick="joinRoom()">Join Room</button>
     </div>
@@ -178,14 +188,14 @@
 <div class="screen" id="lobbyScreen">
   <div class="container">
     <div class="card">
-      <h2 style="margin-bottom:8px">Lobby 🎮</h2>
+      <h2 style="margin-bottom:8px">🎮 Lobby</h2>
       <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Share these details with your friends</p>
       <div class="invite-box">
         <div style="font-size:13px;color:var(--muted);margin-bottom:4px">ROOM ID</div>
         <div style="font-size:24px;font-weight:800" id="lobbyRoomId"></div>
         <div id="lobbyInviteCodeSection">
-        <div style="font-size:13px;color:var(--muted);margin:12px 0 4px">INVITE CODE</div>
-        <div class="invite-code" id="lobbyInviteCode">...</div>
+          <div style="font-size:13px;color:var(--muted);margin:12px 0 4px">INVITE CODE</div>
+          <div class="invite-code" id="lobbyInviteCode">...</div>
         </div>
       </div>
       <div class="player-list" id="lobbyPlayers"></div>
@@ -201,9 +211,11 @@
 <div class="screen" id="resultsScreen">
   <div class="container">
     <div class="card" style="text-align:center">
-      <h2 style="margin-bottom:8px">🎉 Game Over!</h2>
-      <p style="color:var(--muted);margin-bottom:24px">XP earned this game</p>
+      <div style="font-size:48px;margin-bottom:8px">🎉</div>
+      <h2 style="margin-bottom:4px">Game Over!</h2>
+      <p style="color:var(--muted);margin-bottom:24px">Final results</p>
       <div class="xp-list" id="finalXpList"></div>
+      <div id="roundHistory" style="margin-top:24px"></div>
       <div style="margin-top:24px;display:flex;gap:12px;justify-content:center">
         <button class="btn btn-primary" onclick="showScreen('homeScreen');loadLeaderboard()">🏠 Home</button>
         <button class="btn btn-outline" onclick="showScreen('createScreen')">🔁 Play Again</button>
@@ -215,7 +227,6 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/genlayer-js@1.1.7';
 import { studionet } from 'https://esm.sh/genlayer-js@1.1.7/chains';
-
 window._createClient = createClient;
 window._studionet = studionet;
 window._gl = createClient({ chain: studionet });
@@ -230,8 +241,9 @@ let writeClient = null;
 let pollInterval = null;
 let timerInterval = null;
 let timerSeconds = 30;
-let txPending = false;
 let username = localStorage.getItem("foc_username") || "";
+let selectedVote = null;
+let txPending = false;
 
 // ─── Read ─────────────────────────────────────────────────────────────────────
 async function glRead(method, args = []) {
@@ -279,27 +291,24 @@ async function connectWallet() {
         }]});
       }
     }
-    const accounts = await eth.request({ method: "eth_requestAccounts" });
+    const accounts = await eth.request({ method: "eth_accounts" });
     walletAddress = accounts[0];
-
     for (let i = 0; i < 80; i++) {
       if (window._createClient) break;
       await new Promise(r => setTimeout(r, 100));
     }
-
     writeClient = window._createClient({
       chain: window._studionet,
       account: walletAddress,
       provider: eth
     });
-
     const btn = document.getElementById("walletBtn");
     btn.textContent = shortAddr(walletAddress);
     btn.onclick = disconnectWallet;
     updateUsernameDisplay();
     if (!username) showUsernameModal();
     loadLeaderboard();
-    showToast("Connected to GenLayer Studionet ✅", "success");
+    showToast("Connected ✅", "success");
   } catch(e) {
     showToast("Failed: " + (e.message || "error"), "error");
     console.error(e);
@@ -323,6 +332,16 @@ function requireWallet(screen) {
   showScreen(screen);
 }
 
+// ─── Auto reconnect ───────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  if (window.ethereum) {
+    let eth = window.ethereum;
+    if (window.ethereum?.providers) eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
+    const accounts = await eth.request({ method: "eth_accounts" });
+    if (accounts.length > 0) connectWallet();
+  }
+});
+
 // ─── Username ─────────────────────────────────────────────────────────────────
 function showUsernameModal() {
   document.getElementById("usernameInput").value = username || "";
@@ -335,7 +354,7 @@ function saveUsername() {
   localStorage.setItem("foc_username", username);
   document.getElementById("usernameModal").classList.remove("active");
   updateUsernameDisplay();
-  showToast("Username set!", "success");
+  showToast("Username set: " + username, "success");
 }
 function updateUsernameDisplay() {
   document.getElementById("usernameDisplay").textContent = username && walletAddress ? "👤 " + username : "";
@@ -347,6 +366,7 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  txPending = false;
 }
 
 // ─── Leaderboard ──────────────────────────────────────────────────────────────
@@ -366,7 +386,7 @@ async function loadLeaderboard() {
       </div>`).join("");
   } catch(e) {
     el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>';
-    console.error("LB:", e);
+    console.error(e);
   }
 }
 
@@ -385,7 +405,7 @@ async function createRoom() {
     showScreen("lobbyScreen");
     document.getElementById("lobbyRoomId").textContent = roomId;
     document.getElementById("lobbyInviteCode").textContent = "Creating...";
-    document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Creating room on GenLayer blockchain... please wait</div>';
+    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">⛓️</div><div class="title">Creating room on GenLayer...</div><div class="status-msg pulse">Please wait, signing transaction</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("create_room", [roomId, walletAddress, isPrivate, maxPlayers, rounds]);
     txPending = false;
@@ -409,7 +429,7 @@ async function joinRoom() {
     showScreen("lobbyScreen");
     document.getElementById("lobbyRoomId").textContent = roomId;
     document.getElementById("lobbyInviteCode").textContent = "Joining...";
-    document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Joining room on GenLayer blockchain... please wait</div>';
+    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚪</div><div class="title">Joining room on GenLayer...</div><div class="status-msg pulse">Please wait, signing transaction</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("join_room", [roomId, walletAddress, code]);
     txPending = false;
@@ -433,36 +453,40 @@ async function goToLobby(roomId) {
 }
 
 async function pollLobby(roomId) {
+  if (txPending) return;
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
     if (room.error) {
-      document.getElementById("lobbyInviteCode").textContent = "Confirming on blockchain...";
+      document.getElementById("lobbyInviteCode").textContent = "Confirming...";
       document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Waiting for GenLayer to confirm...</div>';
       return;
     }
-    document.getElementById("lobbyInviteCode").textContent = room.is_private ? room.invite_code : "No code needed — public room";
+    const codeSection = document.getElementById("lobbyInviteCodeSection");
+    if (codeSection) codeSection.style.display = room.is_private ? "block" : "none";
+    if (room.is_private) document.getElementById("lobbyInviteCode").textContent = room.invite_code;
     if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
     document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
       <div class="player-item">
         <div class="player-dot"></div>
-        <span>${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : shortAddr(p)}</span>
-        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="margin-left:auto;font-size:11px;color:var(--accent2)">You</span>' : ""}
+        <span style="flex:1">${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : shortAddr(p)}</span>
+        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="font-size:11px;color:var(--accent2)">You</span>' : ""}
       </div>`).join("");
     const isHost = room.host?.toLowerCase() === walletAddress?.toLowerCase();
     const canStart = room.players.length >= 2;
     document.getElementById("lobbyStartBtn").innerHTML = isHost
       ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">
-           ${canStart ? "🚀 Start Game!" : "Waiting for more players..."}
-         </button>`
-      : `<div class="status-msg pulse">Waiting for host to start...</div>`;
+           ${canStart ? "🚀 Start Game!" : "⏳ Waiting for more players..."}
+         </button>
+         ${canStart ? "" : '<p style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Need at least 2 players</p>'}`
+      : `<div class="status-msg pulse">⏳ Waiting for host to start...</div>`;
   } catch(e) { console.error("Lobby poll:", e); }
 }
 
 async function startGame(roomId) {
   try {
     txPending = true;
-    document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">🚀 Starting game on GenLayer... please wait</div>';
+    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game on GenLayer...</div><div class="status-msg pulse">Please wait</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("start_game", [roomId, walletAddress]);
     txPending = false;
@@ -477,7 +501,7 @@ async function startGame(roomId) {
 // ─── Game ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
   showScreen("gameScreen");
-  pollInterval = setInterval(() => {   const claimInput = document.getElementById("claimInput");   if (!claimInput || document.activeElement !== claimInput) pollGame(roomId); }, 3000);
+  pollInterval = setInterval(() => pollGame(roomId), 3000);
   pollGame(roomId);
 }
 
@@ -507,8 +531,11 @@ function renderGame(room) {
         <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
       </div>
-      <div class="status-msg pulse">Moving to next round in 8 seconds...</div>`;
-    setTimeout(() => { if(pollInterval) pollGame(room.id); }, 8000);
+      ${room.current_round < room.total_rounds
+        ? `<div class="status-msg pulse">Next round starting in a moment...</div>`
+        : `<div class="status-msg pulse">Game finishing...</div>`
+      }`;
+    setTimeout(() => { if(pollInterval) pollGame(room.id); }, 6000);
     return;
   }
 
@@ -523,7 +550,7 @@ function renderGame(room) {
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
       ` : `
         <div style="text-align:center;padding:40px 20px">
-          <div style="font-size:36px;margin-bottom:12px">⏳</div>
+          <div style="font-size:48px;margin-bottom:12px">⏳</div>
           <div style="font-size:18px;font-weight:600;margin-bottom:8px">${shortAddr(rnd.claimer)} is writing a claim...</div>
           <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
         </div>
@@ -541,43 +568,46 @@ function renderGame(room) {
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
       ${(hasVoted || isClaimer) ? `
         ${allVoted
-          ? `<div class="status-msg" style="color:var(--green)">✅ All players voted!</div>
-             <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+          ? `<div class="status-msg" style="color:var(--green);font-size:18px;font-weight:700">✅ All players voted!</div>
+             <button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
           : `<div class="status-msg pulse">${isClaimer
               ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")"
               : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"
-            }</div>`
+            }</div>
+            <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:8px">AI verdict will be available when all players vote</div>`
         }
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
-<div id="voteSelection">
-  <div class="vote-btns">
-    <button class="vote-btn fact" id="voteFactBtn" onclick="selectVote(true)">✅ FACT</button>
-    <button class="vote-btn cap" id="voteCapBtn" onclick="selectVote(false)">❌ CAP</button>
-  </div>
-  <div id="voteConfirmArea" style="display:none;margin-top:16px;text-align:center">
-    <div id="voteSelectedLabel" style="font-size:18px;font-weight:700;margin-bottom:12px"></div>
-    <button class="btn btn-primary btn-lg" style="width:100%" onclick="confirmVote('${room.id}')">Confirm Vote</button>
-    <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="cancelVote()">Change my mind</button>
-  </div>
-</div>
+        <div id="voteSelection">
+          <div class="vote-btns">
+            <button class="vote-btn fact" id="voteFactBtn" onclick="selectVote(true)">✅ FACT</button>
+            <button class="vote-btn cap" id="voteCapBtn" onclick="selectVote(false)">❌ CAP</button>
+          </div>
+          <div id="voteConfirmArea" style="display:none;margin-top:16px;text-align:center">
+            <div id="voteSelectedLabel" style="font-size:18px;font-weight:700;margin-bottom:12px"></div>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="confirmVote('${room.id}')">Confirm Vote</button>
+            <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="cancelVote()">← Change my mind</button>
+          </div>
+        </div>
       `}`;
   }
 }
-let selectedVote = null;
 
+// ─── Vote selection ───────────────────────────────────────────────────────────
 function selectVote(isFact) {
   selectedVote = isFact;
   const factBtn = document.getElementById("voteFactBtn");
   const capBtn = document.getElementById("voteCapBtn");
   const confirmArea = document.getElementById("voteConfirmArea");
   const label = document.getElementById("voteSelectedLabel");
-  if (factBtn) factBtn.style.opacity = isFact ? "1" : "0.4";
-  if (capBtn) capBtn.style.opacity = !isFact ? "1" : "0.4";
+  if (factBtn) { factBtn.style.opacity = isFact ? "1" : "0.4"; if(isFact) factBtn.classList.add("selected"); else factBtn.classList.remove("selected"); }
+  if (capBtn) { capBtn.style.opacity = !isFact ? "1" : "0.4"; if(!isFact) capBtn.classList.add("selected"); else capBtn.classList.remove("selected"); }
   if (confirmArea) confirmArea.style.display = "block";
-  if (label) label.textContent = isFact ? "You selected: ✅ FACT" : "You selected: ❌ CAP";
+  if (label) label.innerHTML = isFact ? '<span style="color:var(--green)">You selected: ✅ FACT</span>' : '<span style="color:var(--red)">You selected: ❌ CAP</span>';
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  const timerEl = document.getElementById("timerDisplay");
+  if (timerEl) timerEl.textContent = "⏸️";
 }
 
 function cancelVote() {
@@ -585,33 +615,35 @@ function cancelVote() {
   const factBtn = document.getElementById("voteFactBtn");
   const capBtn = document.getElementById("voteCapBtn");
   const confirmArea = document.getElementById("voteConfirmArea");
-  if (factBtn) factBtn.style.opacity = "1";
-  if (capBtn) capBtn.style.opacity = "1";
+  if (factBtn) { factBtn.style.opacity = "1"; factBtn.classList.remove("selected"); }
+  if (capBtn) { capBtn.style.opacity = "1"; capBtn.classList.remove("selected"); }
   if (confirmArea) confirmArea.style.display = "none";
+  startTimer();
 }
 
 async function confirmVote(roomId) {
   if (selectedVote === null) return;
   txPending = true;
   document.getElementById("gameContent").innerHTML = `
-    <div style="text-align:center;padding:60px 20px">
-      <div style="font-size:36px;margin-bottom:16px">${selectedVote ? "✅" : "❌"}</div>
-      <div style="font-size:20px;font-weight:700;margin-bottom:8px">Submitting your vote...</div>
+    <div class="loading-screen">
+      <div class="icon">${selectedVote ? "✅" : "❌"}</div>
+      <div class="title">Submitting your vote...</div>
       <div class="status-msg pulse">Sending to GenLayer blockchain</div>
     </div>`;
   await castVote(roomId, selectedVote);
   txPending = false;
 }
 
+// ─── Game actions ─────────────────────────────────────────────────────────────
 async function submitClaim(roomId) {
   const claim = document.getElementById("claimInput")?.value?.trim();
   if (!claim || claim.length < 10) return showToast("Claim needs 10+ characters", "error");
   try {
     txPending = true;
     document.getElementById("gameContent").innerHTML = `
-      <div style="text-align:center;padding:60px 20px">
-        <div style="font-size:36px;margin-bottom:16px">📝</div>
-        <div style="font-size:20px;font-weight:700;margin-bottom:8px">Submitting your claim...</div>
+      <div class="loading-screen">
+        <div class="icon">📝</div>
+        <div class="title">Submitting your claim...</div>
         <div class="status-msg pulse">Sending to GenLayer blockchain</div>
       </div>`;
     await glWrite("submit_claim", [roomId, walletAddress, claim]);
@@ -629,25 +661,42 @@ async function submitClaim(roomId) {
 async function castVote(roomId, isFact) {
   try {
     txPending = true;
-    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-    const timerEl = document.getElementById("timerDisplay");
-    if (timerEl) timerEl.textContent = "✅";
     showToast(isFact ? "Voting FACT..." : "Voting CAP...");
     await glWrite("vote", [roomId, walletAddress, isFact]);
-    showToast("Vote in!", "success"); 
     txPending = false;
+    showToast("Vote submitted!", "success");
     pollGame(roomId);
-  } catch(e) { showToast("Failed", "error"); console.error(e); txPending = false; }
+  } catch(e) {
+    txPending = false;
+    showToast("Failed", "error");
+    pollGame(roomId);
+    console.error(e);
+  }
+}
+
+async function startGame(roomId) {
+  try {
+    txPending = true;
+    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game on GenLayer...</div><div class="status-msg pulse">Please wait</div></div>';
+    document.getElementById("lobbyStartBtn").innerHTML = "";
+    await glWrite("start_game", [roomId, walletAddress]);
+    txPending = false;
+    showToast("Game started!", "success");
+  } catch(e) {
+    txPending = false;
+    showToast("Failed to start", "error");
+    console.error(e);
+  }
 }
 
 async function resolveRound(roomId) {
   txPending = true;
   document.getElementById("gameContent").innerHTML = `
-    <div style="text-align:center;padding:60px 20px">
-      <div style="font-size:48px;margin-bottom:16px">🤖</div>
-      <div style="font-size:20px;font-weight:700;margin-bottom:8px">AI Validators are deciding...</div>
+    <div class="loading-screen">
+      <div class="icon">🤖</div>
+      <div class="title">AI Validators are deciding...</div>
       <div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div>
-      <div style="margin-top:24px;color:var(--muted);font-size:13px">This may take 15-30 seconds</div>
+      <div class="subtitle">This may take 15-30 seconds</div>
     </div>`;
   try {
     await glWrite("resolve_round", [roomId]);
@@ -661,21 +710,58 @@ async function resolveRound(roomId) {
     console.error(e);
   }
 }
-  
+
+// ─── Timer ────────────────────────────────────────────────────────────────────
+function startTimer() {
+  timerSeconds = 30;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    const el = document.getElementById("timerDisplay");
+    if (el) { el.textContent = timerSeconds; el.className = "timer-num"+(timerSeconds<=10?" urgent":""); }
+    if (timerSeconds <= 0) { clearInterval(timerInterval); timerInterval = null; }
+  }, 1000);
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
 async function showResults(room) {
   showScreen("resultsScreen");
   const xpMap = {};
   try {
     for (const p of room.players) xpMap[p] = await glRead("get_player_xp", [p]);
   } catch(e) { console.error(e); }
-  document.getElementById("finalXpList").innerHTML = room.players.map(p => `
+
+  // Sort by XP descending
+  const sorted = [...room.players].sort((a,b) => (parseInt(xpMap[b])||0) - (parseInt(xpMap[a])||0));
+  const medals = ["🥇","🥈","🥉"];
+
+  document.getElementById("finalXpList").innerHTML = sorted.map((p,i) => `
     <div class="xp-row">
-      <span>${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||shortAddr(p)) : shortAddr(p)}</span>
-      <span class="xp-gain">${xpMap[p]||0} XP</span>
+      <span>${medals[i]||""} ${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||"You") : shortAddr(p)}</span>
+      <span class="xp-gain">${xpMap[p]||0} XP total</span>
     </div>`).join("");
+
+  // Round history
+  if (room.rounds && room.rounds.length > 0) {
+    document.getElementById("roundHistory").innerHTML = `
+      <div class="history-box">
+        <h4>Round History</h4>
+        ${room.rounds.filter(r => r.is_resolved).map(r => `
+          <div class="history-item">
+            <span style="flex:1">"${r.claim}"</span>
+            <span style="margin-left:12px;font-weight:700;color:${r.verdict?'var(--green)':'var(--red)'}">
+              ${r.verdict ? "✅ FACT" : "❌ CAP"}
+            </span>
+          </div>`).join("")}
+      </div>`;
+  }
+
+  loadLeaderboard();
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function shortAddr(addr) { return addr ? addr.slice(0,6)+"..."+addr.slice(-4) : "?"; }
+
 function showToast(msg, type="") {
   const t = document.getElementById("toast");
   t.textContent = msg;
