@@ -246,33 +246,21 @@ let selectedVote = null;
 let txPending = false;
 let currentRoomId = null;
 
-// ─── Read ─────────────────────────────────────────────────────────────────────
 async function glRead(method, args = []) {
   for (let i = 0; i < 80; i++) {
     if (window._gl) break;
     await new Promise(r => setTimeout(r, 100));
   }
   if (!window._gl) throw new Error("genlayer-js not ready");
-  return await window._gl.readContract({
-    address: CONTRACT,
-    functionName: method,
-    args: args,
-  });
+  return await window._gl.readContract({ address: CONTRACT, functionName: method, args: args });
 }
 
-// ─── Write ────────────────────────────────────────────────────────────────────
 async function glWrite(method, args) {
-  const tx = await writeClient.writeContract({
-    address: CONTRACT,
-    functionName: method,
-    args: args,
-    value: BigInt(0)
-  });
+  const tx = await writeClient.writeContract({ address: CONTRACT, functionName: method, args: args, value: BigInt(0) });
   await window._gl.waitForTransactionReceipt({ hash: tx, status: "ACCEPTED" });
   return tx;
 }
 
-// ─── Wallet ───────────────────────────────────────────────────────────────────
 async function connectWallet() {
   let eth = window.ethereum;
   if (window.ethereum?.providers) eth = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
@@ -283,26 +271,13 @@ async function connectWallet() {
       await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xF22F" }] });
     } catch(se) {
       if (se.code === 4902 || se.code === -32603) {
-        await eth.request({ method: "wallet_addEthereumChain", params: [{
-          chainId: "0xF22F",
-          chainName: "GenLayer Studionet",
-          nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
-          rpcUrls: ["https://studio.genlayer.com/api"],
-          blockExplorerUrls: ["https://explorer-studio.genlayer.com"]
-        }]});
+        await eth.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0xF22F", chainName: "GenLayer Studionet", nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 }, rpcUrls: ["https://studio.genlayer.com/api"], blockExplorerUrls: ["https://explorer-studio.genlayer.com"] }]});
       }
     }
     const accounts = await eth.request({ method: "eth_accounts" });
     walletAddress = accounts[0];
-    for (let i = 0; i < 80; i++) {
-      if (window._createClient) break;
-      await new Promise(r => setTimeout(r, 100));
-    }
-    writeClient = window._createClient({
-      chain: window._studionet,
-      account: walletAddress,
-      provider: eth
-    });
+    for (let i = 0; i < 80; i++) { if (window._createClient) break; await new Promise(r => setTimeout(r, 100)); }
+    writeClient = window._createClient({ chain: window._studionet, account: walletAddress, provider: eth });
     const btn = document.getElementById("walletBtn");
     btn.textContent = shortAddr(walletAddress);
     btn.onclick = disconnectWallet;
@@ -310,22 +285,16 @@ async function connectWallet() {
     if (!username) showUsernameModal();
     loadLeaderboard();
     showToast("Connected ✅", "success");
-  } catch(e) {
-    showToast("Failed: " + (e.message || "error"), "error");
-    console.error(e);
-  }
+  } catch(e) { showToast("Failed: " + (e.message || "error"), "error"); console.error(e); }
 }
 
 function disconnectWallet() {
-  walletAddress = null;
-  writeClient = null;
+  walletAddress = null; writeClient = null;
   const btn = document.getElementById("walletBtn");
-  btn.textContent = "Connect Wallet";
-  btn.onclick = connectWallet;
+  btn.textContent = "Connect Wallet"; btn.onclick = connectWallet;
   document.getElementById("usernameDisplay").textContent = "";
   document.getElementById("leaderboardList").innerHTML = '<div class="status-msg">Connect wallet to load leaderboard</div>';
-  showScreen("homeScreen");
-  showToast("Disconnected");
+  showScreen("homeScreen"); showToast("Disconnected");
 }
 
 function requireWallet(screen) {
@@ -333,7 +302,6 @@ function requireWallet(screen) {
   showScreen(screen);
 }
 
-// ─── Auto reconnect ───────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
   if (window.ethereum) {
     let eth = window.ethereum;
@@ -343,11 +311,7 @@ window.addEventListener('load', async () => {
   }
 });
 
-// ─── Username ─────────────────────────────────────────────────────────────────
-function showUsernameModal() {
-  document.getElementById("usernameInput").value = username || "";
-  document.getElementById("usernameModal").classList.add("active");
-}
+function showUsernameModal() { document.getElementById("usernameInput").value = username || ""; document.getElementById("usernameModal").classList.add("active"); }
 function saveUsername() {
   const val = document.getElementById("usernameInput").value.trim();
   if (!val) return showToast("Enter a username", "error");
@@ -358,11 +322,8 @@ function saveUsername() {
   updateUsernameDisplay();
   showToast("Username set: " + username, "success");
 }
-function updateUsernameDisplay() {
-  document.getElementById("usernameDisplay").textContent = username && walletAddress ? "👤 " + username : "";
-}
+function updateUsernameDisplay() { document.getElementById("usernameDisplay").textContent = username && walletAddress ? "👤 " + username : ""; }
 
-// ─── Screens ──────────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -371,7 +332,6 @@ function showScreen(id) {
   txPending = false;
 }
 
-// ─── Leaderboard ──────────────────────────────────────────────────────────────
 async function loadLeaderboard() {
   const el = document.getElementById("leaderboardList");
   el.innerHTML = '<div class="status-msg pulse">Loading...</div>';
@@ -380,74 +340,44 @@ async function loadLeaderboard() {
     const entries = JSON.parse(raw);
     if (!entries.length) { el.innerHTML = '<div class="status-msg">No players yet — be first!</div>'; return; }
     const medals = ["🥇","🥈","🥉"];
-    el.innerHTML = entries.map((e,i) => `
-      <div class="lb-row">
-        <div class="lb-rank">${medals[i]||"#"+(i+1)}</div>
-        <div class="lb-player">${shortAddr(e.player)}</div>
-        <div class="lb-xp">${e.xp} XP</div>
-      </div>`).join("");
-  } catch(e) {
-    el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>';
-    console.error(e);
-  }
+    el.innerHTML = entries.map((e,i) => `<div class="lb-row"><div class="lb-rank">${medals[i]||"#"+(i+1)}</div><div class="lb-player">${shortAddr(e.player)}</div><div class="lb-xp">${e.xp} XP</div></div>`).join("");
+  } catch(e) { el.innerHTML = '<div class="status-msg">Could not load leaderboard</div>'; console.error(e); }
 }
 
-// ─── Create Room ──────────────────────────────────────────────────────────────
 async function createRoom() {
   let roomId = document.getElementById("createRoomId").value.trim();
-  if (!roomId) {
-    roomId = Math.random().toString(36).substring(2,8).toUpperCase();
-    document.getElementById("createRoomId").value = roomId;
-  }
+  if (!roomId) { roomId = Math.random().toString(36).substring(2,8).toUpperCase(); document.getElementById("createRoomId").value = roomId; }
   const isPrivate = document.getElementById("createPrivate").value === "true";
   const maxPlayers = parseInt(document.getElementById("createMaxPlayers").value);
   const rounds = parseInt(document.getElementById("createRounds").value);
   try {
-    txPending = true;
-    showScreen("lobbyScreen");
+    txPending = true; showScreen("lobbyScreen");
     document.getElementById("lobbyRoomId").textContent = roomId;
     document.getElementById("lobbyInviteCode").textContent = "";
     document.getElementById("lobbyInviteCodeSection").style.display = isPrivate ? "block" : "none";
     document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">⛓️</div><div class="title">Creating room on GenLayer...</div><div class="status-msg pulse">Please wait, signing transaction</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("create_room", [roomId, walletAddress, isPrivate, maxPlayers, rounds]);
-    txPending = false;
-    showToast("Room created!", "success");
-    goToLobby(roomId);
-  } catch(e) {
-    txPending = false;
-    showToast("Failed: " + (e.message||"error"), "error");
-    showScreen("createScreen");
-    console.error(e);
-  }
+    txPending = false; showToast("Room created!", "success"); goToLobby(roomId);
+  } catch(e) { txPending = false; showToast("Failed: " + (e.message||"error"), "error"); showScreen("createScreen"); console.error(e); }
 }
 
-// ─── Join Room ────────────────────────────────────────────────────────────────
 async function joinRoom() {
   const roomId = document.getElementById("joinRoomId").value.trim();
   const code = document.getElementById("joinInviteCode").value.trim();
   if (!roomId) return showToast("Enter a room ID", "error");
   try {
-    txPending = true;
-    showScreen("lobbyScreen");
+    txPending = true; showScreen("lobbyScreen");
     document.getElementById("lobbyRoomId").textContent = roomId;
     document.getElementById("lobbyInviteCode").textContent = "";
     document.getElementById("lobbyInviteCodeSection").style.display = "none";
     document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚪</div><div class="title">Joining room on GenLayer...</div><div class="status-msg pulse">Please wait, signing transaction</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("join_room", [roomId, walletAddress, code]);
-    txPending = false;
-    showToast("Joined!", "success");
-    goToLobby(roomId);
-  } catch(e) {
-    txPending = false;
-    showToast("Failed: " + (e.message||"error"), "error");
-    showScreen("joinScreen");
-    console.error(e);
-  }
+    txPending = false; showToast("Joined!", "success"); goToLobby(roomId);
+  } catch(e) { txPending = false; showToast("Failed: " + (e.message||"error"), "error"); showScreen("joinScreen"); console.error(e); }
 }
 
-// ─── Lobby ────────────────────────────────────────────────────────────────────
 async function goToLobby(roomId) {
   showScreen("lobbyScreen");
   document.getElementById("lobbyRoomId").textContent = roomId;
@@ -461,28 +391,16 @@ async function pollLobby(roomId) {
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
-    if (room.error) {
-      document.getElementById("lobbyInviteCode").textContent = "Confirming...";
-      document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Waiting for GenLayer to confirm...</div>';
-      return;
-    }
+    if (room.error) { document.getElementById("lobbyInviteCode").textContent = "Confirming..."; document.getElementById("lobbyPlayers").innerHTML = '<div class="status-msg pulse">⏳ Waiting for GenLayer to confirm...</div>'; return; }
     const codeSection = document.getElementById("lobbyInviteCodeSection");
     if (codeSection) codeSection.style.display = room.is_private ? "block" : "none";
     if (room.is_private) document.getElementById("lobbyInviteCode").textContent = room.invite_code;
     if (room.game_started) { clearInterval(pollInterval); pollInterval = null; goToGame(roomId); return; }
-    document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `
-      <div class="player-item">
-        <div class="player-dot"></div>
-        <span style="flex:1">${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : getDisplayName(p)}</span>
-        ${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="font-size:11px;color:var(--accent2)">You</span>' : ""}
-      </div>`).join("");
+    document.getElementById("lobbyPlayers").innerHTML = room.players.map(p => `<div class="player-item"><div class="player-dot"></div><span style="flex:1">${p.toLowerCase() === walletAddress?.toLowerCase() ? "👑 " + (username || "You") : getDisplayName(p)}</span>${p.toLowerCase() === walletAddress?.toLowerCase() ? '<span style="font-size:11px;color:var(--accent2)">You</span>' : ""}</div>`).join("");
     const isHost = room.host?.toLowerCase() === walletAddress?.toLowerCase();
     const canStart = room.players.length >= 2;
     document.getElementById("lobbyStartBtn").innerHTML = isHost
-      ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">
-           ${canStart ? "🚀 Start Game!" : "⏳ Waiting for more players..."}
-         </button>
-         ${canStart ? "" : '<p style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Need at least 2 players</p>'}`
+      ? `<button class="btn btn-primary" style="width:100%" ${canStart?"":"disabled"} onclick="startGame('${roomId}')">${canStart ? "🚀 Start Game!" : "⏳ Waiting for more players..."}</button>${canStart ? "" : '<p style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Need at least 2 players</p>'}`
       : `<div class="status-msg pulse">⏳ Waiting for host to start...</div>`;
   } catch(e) { console.error("Lobby poll:", e); }
 }
@@ -493,19 +411,12 @@ async function startGame(roomId) {
     document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game on GenLayer...</div><div class="status-msg pulse">Please wait</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("start_game", [roomId, walletAddress]);
-    txPending = false;
-    showToast("Game started!", "success");
-  } catch(e) {
-    txPending = false;
-    showToast("Failed to start", "error");
-    console.error(e);
-  }
+    txPending = false; showToast("Game started!", "success");
+  } catch(e) { txPending = false; showToast("Failed to start", "error"); console.error(e); }
 }
 
-// ─── Game ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
-  currentRoomId = roomId;
-  showScreen("gameScreen");
+  currentRoomId = roomId; showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
   pollGame(roomId);
 }
@@ -540,16 +451,10 @@ function renderGame(room) {
         <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
         <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${rnd.reasoning || "No reasoning available"}</div>
       </div>
-      ${room.current_round < room.total_rounds
-        ? `<div class="status-msg pulse">Next round starting in a moment...</div>`
-        : `<div class="status-msg pulse">Game finishing...</div>`
-      }`;
-    txPending = false;
-selectedVote = null;
-if (!pollInterval && currentRoomId) {
-  pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-}
-setTimeout(() => { pollGame(room.id); }, 12000);
+      ${room.current_round < room.total_rounds ? `<div class="status-msg pulse">Next round starting in a moment...</div>` : `<div class="status-msg pulse">Game finishing...</div>`}`;
+    txPending = false; selectedVote = null;
+    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+    setTimeout(() => { pollGame(room.id); }, 12000);
     return;
   }
 
@@ -558,31 +463,23 @@ setTimeout(() => { pollGame(room.id); }, 12000);
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Claim Phase</div>
       ${isClaimer ? `
         <div class="status-msg" style="color:var(--accent2);font-weight:600;margin-bottom:16px">🎤 Your turn — submit a claim!</div>
-        <div class="form-group">
-          <input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/>
-        </div>
+        <div class="form-group"><input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/></div>
         <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
       ` : `
         <div style="text-align:center;padding:40px 20px">
           <div style="font-size:48px;margin-bottom:12px">⏳</div>
           <div style="font-size:18px;font-weight:600;margin-bottom:8px">${shortAddr(rnd.claimer)} is writing a claim...</div>
           <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
-        </div>
-      `}`;
-    return;
-  }
-  if (!rnd.voting_open && !rnd.is_resolved) {
-    el.innerHTML = `
-      <div class="loading-screen">
-        <div class="icon">🤖</div>
-        <div class="title">AI Validators are deciding...</div>
-        <div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div>
-        <div class="subtitle">This may take 15-30 seconds</div>
-      </div>`;
+        </div>`}`;
     return;
   }
 
-if (rnd.voting_open) {
+  if (!rnd.voting_open && !rnd.is_resolved) {
+    el.innerHTML = `<div class="loading-screen"><div class="icon">🤖</div><div class="title">AI Validators are deciding...</div><div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div><div class="subtitle">This may take 15-30 seconds</div></div>`;
+    return;
+  }
+
+  if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
     const nonClaimers = room.players.filter(p => p.toLowerCase() !== rnd.claimer?.toLowerCase()).length;
     const votesIn = Object.keys(rnd.votes || {}).length;
@@ -593,16 +490,9 @@ if (rnd.voting_open) {
       ${(hasVoted || isClaimer) ? `
         ${allVoted
           ? `<div class="status-msg" style="color:var(--green);font-size:18px;font-weight:700">✅ All players voted!</div>
-             ${isClaimer
-               ? `<button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
-               : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to reveal verdict...</div>`
-             }`
-          : `<div class="status-msg pulse">${isClaimer
-              ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")"
-              : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"
-            }</div>
-            <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:8px">AI verdict will be available when all players vote</div>`
-        }
+             ${isClaimer ? `<button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>` : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to reveal verdict...</div>`}`
+          : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>
+             <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:8px">AI verdict will be available when all players vote</div>`}
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
@@ -616,17 +506,14 @@ if (rnd.voting_open) {
             <button class="btn btn-primary btn-lg" style="width:100%" onclick="confirmVote('${room.id}')">Confirm Vote</button>
             <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="cancelVote()">← Change my mind</button>
           </div>
-        </div>
-      `}`;
+        </div>`}`;
   }
 }
 
-// ─── Vote selection ───────────────────────────────────────────────────────────
 function selectVote(isFact) {
   txPending = true;
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   selectedVote = isFact;
-  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   const factBtn = document.getElementById("voteFactBtn");
   const capBtn = document.getElementById("voteCapBtn");
   const confirmArea = document.getElementById("voteConfirmArea");
@@ -641,8 +528,7 @@ function selectVote(isFact) {
 }
 
 function cancelVote() {
-  txPending = false;
-  selectedVote = null;
+  txPending = false; selectedVote = null;
   const factBtn = document.getElementById("voteFactBtn");
   const capBtn = document.getElementById("voteCapBtn");
   const confirmArea = document.getElementById("voteConfirmArea");
@@ -651,14 +537,14 @@ function cancelVote() {
   if (confirmArea) confirmArea.style.display = "none";
   if (currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
 }
-  
+
 function getDisplayName(addr) {
   if (!addr) return "?";
   if (addr.toLowerCase() === walletAddress?.toLowerCase()) return username || shortAddr(addr);
   const stored = localStorage.getItem("foc_name_" + addr.toLowerCase());
   return stored || shortAddr(addr);
 }
-  
+
 async function confirmVote(roomId) {
   if (selectedVote === null) return;
   txPending = true;
@@ -672,63 +558,40 @@ async function confirmVote(roomId) {
   txPending = false;
 }
 
-// ─── Game actions ─────────────────────────────────────────────────────────────
 async function submitClaim(roomId) {
   const claim = document.getElementById("claimInput")?.value?.trim();
   if (!claim || claim.length < 10) return showToast("Claim needs 10+ characters", "error");
   try {
     txPending = true;
-    document.getElementById("gameContent").innerHTML = `
-      <div class="loading-screen">
-        <div class="icon">📝</div>
-        <div class="title">Submitting your claim...</div>
-        <div class="status-msg pulse">Sending to GenLayer blockchain</div>
-      </div>`;
+    document.getElementById("gameContent").innerHTML = `<div class="loading-screen"><div class="icon">📝</div><div class="title">Submitting your claim...</div><div class="status-msg pulse">Sending to GenLayer blockchain</div></div>`;
     await glWrite("submit_claim", [roomId, walletAddress, claim]);
-    txPending = false;
-    showToast("Claim submitted!", "success");
-    pollGame(roomId);
-  } catch(e) {
-    txPending = false;
-    showToast("Failed", "error");
-    pollGame(roomId);
-    console.error(e);
-  }
+    txPending = false; showToast("Claim submitted!", "success"); pollGame(roomId);
+  } catch(e) { txPending = false; showToast("Failed", "error"); pollGame(roomId); console.error(e); }
 }
 
 async function castVote(roomId, isFact) {
   try {
-    txPending = true;
-    showToast(isFact ? "Voting FACT..." : "Voting CAP...");
+    txPending = true; showToast(isFact ? "Voting FACT..." : "Voting CAP...");
     await glWrite("vote", [roomId, walletAddress, isFact]);
-    txPending = false;
-    selectedVote = null;
-    showToast("Vote submitted!", "success");
-    if (!pollInterval && currentRoomId) {
-      pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-    }
+    txPending = false; selectedVote = null; showToast("Vote submitted!", "success");
+    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
     pollGame(roomId);
-      } catch(e) {
-    txPending = false;
-    showToast("Failed", "error");
-    pollGame(roomId);
-    console.error(e);
-  }
+  } catch(e) { txPending = false; showToast("Failed", "error"); pollGame(roomId); console.error(e); }
 }
 
-async function startGame(roomId) {
-  try {
-    txPending = true;
-    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game on GenLayer...</div><div class="status-msg pulse">Please wait</div></div>';
-    document.getElementById("lobbyStartBtn").innerHTML = "";
-    await glWrite("start_game", [roomId, walletAddress]);
-    txPending = false;
-    showToast("Game started!", "success");
-  } catch(e) {
-    txPending = false;
-    showToast("Failed to start", "error");
-    console.error(e);
+// ─── Resolve Round (FIXED) ────────────────────────────────────────────────────
+async function waitForResolved(roomId, timeoutMs = 15000, intervalMs = 1500) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const raw = await glRead("get_room", [roomId]);
+      const room = JSON.parse(raw);
+      const rnd = room.rounds?.[room.current_round - 1];
+      if (rnd?.is_resolved) return room;
+    } catch(e) { console.warn("waitForResolved poll error:", e); }
+    await new Promise(r => setTimeout(r, intervalMs));
   }
+  return null;
 }
 
 async function resolveRound(roomId) {
@@ -736,31 +599,32 @@ async function resolveRound(roomId) {
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   document.getElementById("gameContent").innerHTML = `
     <div class="loading-screen">
-      <div class="icon">🤖</div>
+      <div class="icon">⚖️</div>
       <div class="title">AI Validators are deciding...</div>
-      <div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div>
+      <div class="status-msg pulse">Resolving on GenLayer blockchain</div>
       <div class="subtitle">This may take 15-30 seconds</div>
     </div>`;
   try {
-      await glWrite("resolve_round", [roomId]);
-      txPending = false;
-      showToast("Verdict revealed!", "success", true);
-      const raw = await glRead("get_room", [roomId]);
-      const room = JSON.parse(raw);
+    await glWrite("resolve_round", [roomId]);
+    txPending = false;
+    showToast("Verdict revealed!", "success", true);
+    const room = await waitForResolved(roomId, 15000, 1500);
+    if (room) {
       renderGame(room);
       setTimeout(() => {
-        if (!pollInterval && currentRoomId) {
-          pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-        }
+        if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
       }, 10000);
-    } catch(e) {
-      txPending = false;
-      selectedVote = null;
-      showToast("Failed — tap again to retry", "error");
+    } else {
+      showToast("Taking longer than expected...", "error");
       pollGame(roomId);
-      console.error(e);
     }
+  } catch(e) {
+    txPending = false; selectedVote = null;
+    showToast("Failed — tap again to retry", "error");
+    pollGame(roomId); console.error(e);
+  }
 }
+
 // ─── Timer ────────────────────────────────────────────────────────────────────
 function startTimer() {
   timerSeconds = 30;
@@ -773,45 +637,19 @@ function startTimer() {
   }, 1000);
 }
 
-// ─── Results ──────────────────────────────────────────────────────────────────
 async function showResults(room) {
-  txPending = false;
-  selectedVote = null;
-  showScreen("resultsScreen");
+  txPending = false; selectedVote = null; showScreen("resultsScreen");
   const xpMap = {};
-  try {
-    for (const p of room.players) xpMap[p] = await glRead("get_player_xp", [p]);
-  } catch(e) { console.error(e); }
-
-  // Sort by XP descending
+  try { for (const p of room.players) xpMap[p] = await glRead("get_player_xp", [p]); } catch(e) { console.error(e); }
   const sorted = [...room.players].sort((a,b) => (parseInt(xpMap[b])||0) - (parseInt(xpMap[a])||0));
   const medals = ["🥇","🥈","🥉"];
-
-  document.getElementById("finalXpList").innerHTML = sorted.map((p,i) => `
-    <div class="xp-row">
-      <span>${medals[i]||""} ${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||"You") : getDisplayName(p)}</span>
-      <span class="xp-gain">${xpMap[p]||0} XP total</span>
-    </div>`).join("");
-
-  // Round history
+  document.getElementById("finalXpList").innerHTML = sorted.map((p,i) => `<div class="xp-row"><span>${medals[i]||""} ${p.toLowerCase()===walletAddress?.toLowerCase() ? (username||"You") : getDisplayName(p)}</span><span class="xp-gain">${xpMap[p]||0} XP total</span></div>`).join("");
   if (room.rounds && room.rounds.length > 0) {
-    document.getElementById("roundHistory").innerHTML = `
-      <div class="history-box">
-        <h4>Round History</h4>
-        ${room.rounds.filter(r => r.is_resolved).map(r => `
-          <div class="history-item">
-            <span style="flex:1">"${r.claim}"</span>
-            <span style="margin-left:12px;font-weight:700;color:${r.verdict?'var(--green)':'var(--red)'}">
-              ${r.verdict ? "✅ FACT" : "❌ CAP"}
-            </span>
-          </div>`).join("")}
-      </div>`;
+    document.getElementById("roundHistory").innerHTML = `<div class="history-box"><h4>Round History</h4>${room.rounds.filter(r => r.is_resolved).map(r => `<div class="history-item"><span style="flex:1">"${r.claim}"</span><span style="margin-left:12px;font-weight:700;color:${r.verdict?'var(--green)':'var(--red)'}">${r.verdict ? "✅ FACT" : "❌ CAP"}</span></div>`).join("")}</div>`;
   }
-
   loadLeaderboard();
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function playAgain() {
   document.getElementById("createRoomId").value = "";
   document.getElementById("createPrivate").value = "false";
