@@ -583,16 +583,20 @@ function renderGame(room) {
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Vote!</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      ${(hasVoted || isClaimer) ? `
+    ${(hasVoted || isClaimer) ? `
         ${allVoted
           ? `<div class="status-msg" style="color:var(--green);font-size:18px;font-weight:700">✅ All players voted!</div>
-             <button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+             ${isClaimer || room.host?.toLowerCase() === walletAddress?.toLowerCase()
+               ? `<button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+               : `<div class="status-msg pulse">⏳ Waiting for host to reveal verdict...</div>`
+             }`
           : `<div class="status-msg pulse">${isClaimer
               ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")"
               : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"
             }</div>
             <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:8px">AI verdict will be available when all players vote</div>`
         }
+      ` : `
       ` : `
         <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
         <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
@@ -727,7 +731,7 @@ async function resolveRound(roomId) {
   try {
     await glWrite("resolve_round", [roomId]);
     txPending = false;
-    showToast("Verdict revealed!", "success");
+    showToast("Verdict revealed!", "success", true);
     pollGame(roomId);
   } catch(e) {
     txPending = false;
@@ -795,11 +799,13 @@ function playAgain() {
 }
 function shortAddr(addr) { return addr ? addr.slice(0,6)+"..."+addr.slice(-4) : "?"; }
 
-function showToast(msg, type="") {
+function showToast(msg, type="", center=false) {
   const t = document.getElementById("toast");
   t.textContent = msg;
+  t.style.right = center ? "50%" : "24px";
+  t.style.transform = center ? "translateX(50%) translateY(0)" : "translateY(0)";
   t.className = "toast show"+(type?" "+type:"");
-  setTimeout(()=>t.className="toast", 3000);
+  setTimeout(()=>{ t.className="toast"; t.style.right="24px"; t.style.transform=""; }, 3000);
 }
 
 updateUsernameDisplay();
