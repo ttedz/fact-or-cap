@@ -512,6 +512,8 @@ async function pollGame(roomId) {
   if (txPending) return;
   const claimInput = document.getElementById("claimInput");
   if (claimInput && document.activeElement === claimInput) return;
+  const confirmArea = document.getElementById("voteConfirmArea");
+  if (confirmArea && confirmArea.style.display !== "none") return;
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
@@ -560,6 +562,16 @@ function renderGame(room) {
           <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
         </div>
       `}`;
+    return;
+  }
+  if (!rnd.voting_open && !rnd.is_resolved) {
+    el.innerHTML = `
+      <div class="loading-screen">
+        <div class="icon">🤖</div>
+        <div class="title">AI Validators are deciding...</div>
+        <div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div>
+        <div class="subtitle">This may take 15-30 seconds</div>
+      </div>`;
     return;
   }
 
