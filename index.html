@@ -745,6 +745,7 @@ async function resolveRound(roomId) {
      await glWrite("resolve_round", [roomId]);
     txPending = false;
     showToast("Verdict revealed!", "success", true);
+    await new Promise(r => setTimeout(r, 3000));
     await pollGame(roomId);
     setTimeout(() => {
       pollGame(roomId);
