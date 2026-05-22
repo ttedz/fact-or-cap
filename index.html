@@ -742,9 +742,10 @@ async function resolveRound(roomId) {
       <div class="subtitle">This may take 15-30 seconds</div>
     </div>`;
   try {
-    await glWrite("resolve_round", [roomId]);
+     await glWrite("resolve_round", [roomId]);
     txPending = false;
     showToast("Verdict revealed!", "success", true);
+    await pollGame(roomId);
     setTimeout(() => {
       pollGame(roomId);
       if (!pollInterval && currentRoomId) {
