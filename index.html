@@ -416,7 +416,9 @@ async function startGame(roomId) {
 }
 
 async function goToGame(roomId) {
-  currentRoomId = roomId; showScreen("gameScreen");
+  currentRoomId = roomId;
+  txPending = false; 
+  showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
   pollGame(roomId);
 }
