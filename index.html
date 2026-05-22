@@ -598,55 +598,66 @@ async function resolveRound(roomId) {
   txPending = true;
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
 
-  // Capture round index BEFORE resolving so we don't lose it when game advances
+  // Capture round index BEFORE resolving
   let roundIndex = 0;
   try {
     const raw = await glRead("get_room", [roomId]);
     roundIndex = JSON.parse(raw).current_round - 1;
   } catch(e) {}
 
+  const showLoading = (msg = "Resolving on GenLayer blockchain") => {
+    document.getElementById("gameContent").innerHTML = `
+      <div class="loading-screen">
+        <div class="icon">⚖️</div>
+        <div class="title">AI Validators are deciding...</div>
+        <div class="status-msg pulse">${msg}</div>
+        <div class="subtitle">This may take 15-30 seconds</div>
+      </div>`;
+  };
+
+  const MAX_RETRIES = 3;
+  let attempt = 0;
+
+  while (attempt < MAX_RETRIES) {
+    attempt++;
+    showLoading(attempt > 1 ? `Attempt ${attempt}/${MAX_RETRIES} — retrying...` : "Resolving on GenLayer blockchain");
+
+    try {
+      await glWrite("resolve_round", [roomId]);
+      txPending = false;
+      showToast("Verdict revealed!", "success", true);
+
+      const result = await waitForResolved(roomId, roundIndex, 60000, 2000);
+      if (result) {
+        const fakeRoom = { ...result.room, current_round: roundIndex + 1 };
+        renderGame(fakeRoom);
+        setTimeout(() => {
+          if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+        }, 10000);
+        return; // success, done
+      } else {
+        // glWrite succeeded but state never updated — retry
+        showToast(`Attempt ${attempt} timed out, retrying...`, "error");
+      }
+    } catch(e) {
+      console.error(`resolveRound attempt ${attempt} failed:`, e);
+      if (attempt < MAX_RETRIES) {
+        showToast(`Failed — retrying (${attempt}/${MAX_RETRIES})...`, "error");
+        await new Promise(r => setTimeout(r, 2000)); // wait 2s before retry
+      }
+    }
+  }
+
+  // All retries exhausted
+  txPending = false;
+  selectedVote = null;
   document.getElementById("gameContent").innerHTML = `
     <div class="loading-screen">
-      <div class="icon">⚖️</div>
-      <div class="title">AI Validators are deciding...</div>
-      <div class="status-msg pulse">Resolving on GenLayer blockchain</div>
-      <div class="subtitle">This may take 15-30 seconds</div>
+      <div class="icon">⚠️</div>
+      <div class="title">Could not get verdict</div>
+      <div class="status-msg">GenLayer might be slow. Tap below to try again.</div>
+      <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
     </div>`;
-
-  try {
-    await glWrite("resolve_round", [roomId]);
-    txPending = false;
-    showToast("Verdict revealed!", "success", true);
-
-    const result = await waitForResolved(roomId, roundIndex, 60000, 2000);
-    if (result) {
-      // Force render the resolved round even if game already advanced
-      const fakeRoom = { ...result.room, current_round: roundIndex + 1 };
-      renderGame(fakeRoom);
-      setTimeout(() => {
-        if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-      }, 10000);
-    } else {
-      showToast("Taking longer than expected...", "error");
-      pollGame(roomId);
-    }
-  } catch(e) {
-    txPending = false; selectedVote = null;
-    showToast("Failed — tap again to retry", "error");
-    pollGame(roomId); console.error(e);
-  }
-}
-
-// ─── Timer ────────────────────────────────────────────────────────────────────
-function startTimer() {
-  timerSeconds = 30;
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timerSeconds--;
-    const el = document.getElementById("timerDisplay");
-    if (el) { el.textContent = timerSeconds; el.className = "timer-num"+(timerSeconds<=10?" urgent":""); }
-    if (timerSeconds <= 0) { clearInterval(timerInterval); timerInterval = null; }
-  }, 1000);
 }
 
 async function showResults(room) {
