@@ -580,15 +580,15 @@ async function castVote(roomId, isFact) {
 }
 
 // ─── Resolve Round (FIXED) ────────────────────────────────────────────────────
-async function waitForResolved(roomId, timeoutMs = 15000, intervalMs = 1500) {
+async function waitForResolved(roomId, roundIndex, timeoutMs = 60000, intervalMs = 2000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
       const raw = await glRead("get_room", [roomId]);
       const room = JSON.parse(raw);
-      const rnd = room.rounds?.[room.current_round - 1];
-      if (rnd?.is_resolved) return room;
-    } catch(e) { console.warn("waitForResolved poll error:", e); }
+      const rnd = room.rounds?.[roundIndex]; // check the SPECIFIC round, not current
+      if (rnd?.is_resolved) return { room, roundIndex };
+    } catch(e) { console.warn("poll error:", e); }
     await new Promise(r => setTimeout(r, intervalMs));
   }
   return null;
@@ -597,6 +597,14 @@ async function waitForResolved(roomId, timeoutMs = 15000, intervalMs = 1500) {
 async function resolveRound(roomId) {
   txPending = true;
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+
+  // Capture round index BEFORE resolving so we don't lose it when game advances
+  let roundIndex = 0;
+  try {
+    const raw = await glRead("get_room", [roomId]);
+    roundIndex = JSON.parse(raw).current_round - 1;
+  } catch(e) {}
+
   document.getElementById("gameContent").innerHTML = `
     <div class="loading-screen">
       <div class="icon">⚖️</div>
@@ -604,13 +612,17 @@ async function resolveRound(roomId) {
       <div class="status-msg pulse">Resolving on GenLayer blockchain</div>
       <div class="subtitle">This may take 15-30 seconds</div>
     </div>`;
+
   try {
     await glWrite("resolve_round", [roomId]);
     txPending = false;
     showToast("Verdict revealed!", "success", true);
-    const room = await waitForResolved(roomId, 15000, 1500);
-    if (room) {
-      renderGame(room);
+
+    const result = await waitForResolved(roomId, roundIndex, 60000, 2000);
+    if (result) {
+      // Force render the resolved round even if game already advanced
+      const fakeRoom = { ...result.room, current_round: roundIndex + 1 };
+      renderGame(fakeRoom);
       setTimeout(() => {
         if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
       }, 10000);
