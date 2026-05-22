@@ -582,7 +582,7 @@ setTimeout(() => { pollGame(room.id); }, 12000);
     return;
   }
 
-  if (rnd.voting_open) {
+if (rnd.voting_open) {
     if (!timerInterval && !hasVoted && !isClaimer) startTimer();
     const nonClaimers = room.players.filter(p => p.toLowerCase() !== rnd.claimer?.toLowerCase()).length;
     const votesIn = Object.keys(rnd.votes || {}).length;
@@ -590,13 +590,13 @@ setTimeout(() => { pollGame(room.id); }, 12000);
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Vote!</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-    ${(hasVoted || isClaimer) ? `
+      ${(hasVoted || isClaimer) ? `
         ${allVoted
           ? `<div class="status-msg" style="color:var(--green);font-size:18px;font-weight:700">✅ All players voted!</div>
-            ${isClaimer
-              ? `<button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
-              : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to reveal verdict...</div>`
-            }`
+             ${isClaimer
+               ? `<button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>`
+               : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to reveal verdict...</div>`
+             }`
           : `<div class="status-msg pulse">${isClaimer
               ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")"
               : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"
