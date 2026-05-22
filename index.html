@@ -244,6 +244,7 @@ let timerSeconds = 30;
 let username = localStorage.getItem("foc_username") || "";
 let selectedVote = null;
 let txPending = false;
+let currentRoomId = null;
 
 // ─── Read ─────────────────────────────────────────────────────────────────────
 async function glRead(method, args = []) {
@@ -503,6 +504,7 @@ async function startGame(roomId) {
 
 // ─── Game ─────────────────────────────────────────────────────────────────────
 async function goToGame(roomId) {
+  currentRoomId = roomId;
   showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
   pollGame(roomId);
@@ -617,7 +619,9 @@ function renderGame(room) {
 // ─── Vote selection ───────────────────────────────────────────────────────────
 function selectVote(isFact) {
   txPending = true;
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   selectedVote = isFact;
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   const factBtn = document.getElementById("voteFactBtn");
   const capBtn = document.getElementById("voteCapBtn");
   const confirmArea = document.getElementById("voteConfirmArea");
@@ -640,7 +644,7 @@ function cancelVote() {
   if (factBtn) { factBtn.style.opacity = "1"; factBtn.classList.remove("selected"); }
   if (capBtn) { capBtn.style.opacity = "1"; capBtn.classList.remove("selected"); }
   if (confirmArea) confirmArea.style.display = "none";
-  startTimer();
+  if (currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
 }
   
 function getDisplayName(addr) {
