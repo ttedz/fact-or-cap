@@ -526,7 +526,7 @@ async function pollGame(roomId) {
 }
 
 function renderGame(room) {
-  const rnd = room.rounds[room.current_round - 1];
+  const rnd = room.rounds[room.current_round - 1] || room.rounds[room.rounds.length - 1];
   if (!rnd) return;
   const isClaimer = rnd.claimer?.toLowerCase() === walletAddress?.toLowerCase();
   const hasVoted = walletAddress && rnd.votes && rnd.votes[walletAddress] !== undefined;
@@ -538,7 +538,7 @@ function renderGame(room) {
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
       <div class="verdict-box ${rnd.verdict?"true":"false"}">
         <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
-        <div class="verdict-reasoning">${rnd.reasoning || ""}</div>
+        <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${rnd.reasoning || "No reasoning available"}</div>
       </div>
       ${room.current_round < room.total_rounds
         ? `<div class="status-msg pulse">Next round starting in a moment...</div>`
