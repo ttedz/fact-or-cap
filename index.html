@@ -733,6 +733,7 @@ async function startGame(roomId) {
 
 async function resolveRound(roomId) {
   txPending = true;
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   document.getElementById("gameContent").innerHTML = `
     <div class="loading-screen">
       <div class="icon">🤖</div>
@@ -744,7 +745,12 @@ async function resolveRound(roomId) {
     await glWrite("resolve_round", [roomId]);
     txPending = false;
     showToast("Verdict revealed!", "success", true);
-    setTimeout(() => pollGame(roomId), 12000);
+    setTimeout(() => {
+      pollGame(roomId);
+      if (!pollInterval && currentRoomId) {
+        pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+      }
+    }, 12000);
   } catch(e) {
     txPending = false;
     selectedVote = null;
@@ -752,8 +758,6 @@ async function resolveRound(roomId) {
     pollGame(roomId);
     console.error(e);
   }
-}
-
 // ─── Timer ────────────────────────────────────────────────────────────────────
 function startTimer() {
   timerSeconds = 30;
