@@ -544,7 +544,12 @@ function renderGame(room) {
         ? `<div class="status-msg pulse">Next round starting in a moment...</div>`
         : `<div class="status-msg pulse">Game finishing...</div>`
       }`;
-    setTimeout(() => { if(pollInterval) pollGame(room.id); }, 6000);
+    txPending = false;
+selectedVote = null;
+if (!pollInterval && currentRoomId) {
+  pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+}
+setTimeout(() => { pollGame(room.id); }, 6000);
     return;
   }
 
@@ -738,6 +743,7 @@ async function resolveRound(roomId) {
     pollGame(roomId);
   } catch(e) {
     txPending = false;
+    selectedVote = null;
     showToast("Failed — tap again to retry", "error");
     pollGame(roomId);
     console.error(e);
@@ -758,6 +764,8 @@ function startTimer() {
 
 // ─── Results ──────────────────────────────────────────────────────────────────
 async function showResults(room) {
+  txPending = false;
+  selectedVote = null;
   showScreen("resultsScreen");
   const xpMap = {};
   try {
