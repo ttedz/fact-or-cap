@@ -428,7 +428,8 @@ async function joinRoom() {
     txPending = true;
     showScreen("lobbyScreen");
     document.getElementById("lobbyRoomId").textContent = roomId;
-    document.getElementById("lobbyInviteCode").textContent = "Joining...";
+    document.getElementById("lobbyInviteCode").textContent = "";
+    document.getElementById("lobbyInviteCodeSection").style.display = "none";
     document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚪</div><div class="title">Joining room on GenLayer...</div><div class="status-msg pulse">Please wait, signing transaction</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("join_room", [roomId, walletAddress, code]);
@@ -507,6 +508,8 @@ async function goToGame(roomId) {
 
 async function pollGame(roomId) {
   if (txPending) return;
+  const claimInput = document.getElementById("claimInput");
+  if (claimInput && document.activeElement === claimInput) return;
   try {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
