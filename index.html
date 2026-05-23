@@ -412,8 +412,17 @@ async function startGame(roomId) {
     document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game...</div><div class="status-msg pulse">Please wait</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("start_game", [roomId, walletAddress]);
-    txPending = false; showToast("Game started!", "success");
-  } catch(e) { txPending = false; showToast("Failed to start", "error"); console.error(e); }
+    txPending = false;
+    showToast("Game started!", "success");
+    if (!pollInterval) {
+      pollInterval = setInterval(() => pollLobby(roomId), 3000);
+    }
+    pollLobby(roomId);
+  } catch(e) {
+    txPending = false;
+    showToast("Failed to start", "error");
+    console.error(e);
+  }
 }
 
 async function goToGame(roomId) {
@@ -631,13 +640,11 @@ async function waitForResolved(roomId, roundIndex, timeoutMs = 60000, intervalMs
 async function resolveRound(roomId) {
   txPending = true;
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-
   let roundIndex = 0;
   try {
     const raw = await glRead("get_room", [roomId]);
     roundIndex = JSON.parse(raw).current_round - 1;
   } catch(e) {}
-
   document.getElementById("gameContent").innerHTML = `
     <div class="loading-screen">
       <div class="icon">⚖️</div>
@@ -645,7 +652,6 @@ async function resolveRound(roomId) {
       <div class="status-msg pulse">Resolving on GenLayer blockchain</div>
       <div class="subtitle">This may take 15-30 seconds</div>
     </div>`;
-
   try {
     await glWrite("resolve_round", [roomId]);
     txPending = false;
@@ -668,7 +674,7 @@ async function resolveRound(roomId) {
           <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
         </div>`;
     }
-} catch(e) {
+  } catch(e) {
     txPending = false;
     const result = await waitForResolved(roomId, roundIndex, 10000, 2000);
     if (result) {
