@@ -424,6 +424,10 @@ async function goToGame(roomId) {
 }
 
 async function pollGame(roomId) {
+  // Self-heal: restart interval if it died
+  if (!pollInterval && currentRoomId && !txPending) {
+    pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+  }
   if (txPending) return;
   const claimInput = document.getElementById("claimInput");
   if (claimInput && document.activeElement === claimInput) return;
@@ -567,7 +571,12 @@ async function submitClaim(roomId) {
     txPending = true;
     document.getElementById("gameContent").innerHTML = `<div class="loading-screen"><div class="icon">📝</div><div class="title">Submitting your claim...</div><div class="status-msg pulse">Sending to GenLayer blockchain</div></div>`;
     await glWrite("submit_claim", [roomId, walletAddress, claim]);
-    txPending = false; showToast("Claim submitted!", "success"); pollGame(roomId);
+    txPending = false;
+    showToast("Claim submitted!", "success");
+    if (!pollInterval && currentRoomId) {
+      pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+    }
+    pollGame(roomId);
   } catch(e) { txPending = false; showToast("Failed", "error"); pollGame(roomId); console.error(e); }
 }
 
