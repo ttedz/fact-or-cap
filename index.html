@@ -409,7 +409,7 @@ async function pollLobby(roomId) {
 async function startGame(roomId) {
   try {
     txPending = true;
-    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game on GenLayer...</div><div class="status-msg pulse">Please wait</div></div>';
+    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game...</div><div class="status-msg pulse">Please wait</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("start_game", [roomId, walletAddress]);
     txPending = false; showToast("Game started!", "success");
