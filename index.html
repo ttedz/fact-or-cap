@@ -669,7 +669,7 @@ async function resolveRound(roomId) {
         </div>`;
     }
   } catch(e) {
-    txPending = false; selectedVote = null;
+    txPending = false;
     document.getElementById("gameContent").innerHTML = `
       <div class="loading-screen">
         <div class="icon">⚠️</div>
@@ -680,7 +680,6 @@ async function resolveRound(roomId) {
     console.error(e);
   }
 }
-
 function startTimer() {
   timerSeconds = 30;
   if (timerInterval) clearInterval(timerInterval);
