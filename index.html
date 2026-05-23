@@ -439,19 +439,18 @@ async function pollGame(roomId) {
     const room = JSON.parse(raw);
     if (room.error) return;
 
-    // Check missed verdict BEFORE checking game_finished
-    if (room.current_round > 1) {
-      const prevIdx = room.current_round - 2;
-      const prevRound = room.rounds[prevIdx];
-      if (prevRound && prevRound.is_resolved && lastShownVerdict < prevIdx) {
-        lastShownVerdict = prevIdx;
+    // Check ALL rounds for unshown verdicts before anything else
+    for (let i = 0; i < room.rounds.length; i++) {
+      const rnd = room.rounds[i];
+      if (rnd && rnd.is_resolved && lastShownVerdict < i) {
+        lastShownVerdict = i;
         const el = document.getElementById("gameContent");
         el.innerHTML = `
-          <div class="round-badge">Round ${prevRound.round_num} / ${room.total_rounds} — Verdict</div>
-          <div class="claim-box"><div class="claim-text">"${prevRound.claim}"</div></div>
-          <div class="verdict-box ${prevRound.verdict?"true":"false"}">
-            <div class="verdict-label">${prevRound.verdict ? "✅ FACT" : "❌ CAP"}</div>
-            <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${prevRound.reasoning || "No reasoning available"}</div>
+          <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Verdict</div>
+          <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
+          <div class="verdict-box ${rnd.verdict?"true":"false"}">
+            <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
+            <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${rnd.reasoning || "No reasoning available"}</div>
           </div>
           <div class="status-msg pulse">${room.game_finished ? "Game finishing..." : "Next round starting in a moment..."}</div>`;
         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
@@ -463,6 +462,11 @@ async function pollGame(roomId) {
         return;
       }
     }
+
+    if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
+    if (!txPending) renderGame(room);
+  } catch(e) { console.error("Game poll:", e); }
+}
 
     if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
     if (!txPending) renderGame(room);
