@@ -659,7 +659,6 @@ async function resolveRound(roomId) {
         if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
       }, 10000);
     } else {
-      // Timed out — let user decide to retry
       txPending = false;
       document.getElementById("gameContent").innerHTML = `
         <div class="loading-screen">
@@ -680,16 +679,6 @@ async function resolveRound(roomId) {
       </div>`;
     console.error(e);
   }
-}
-
-  txPending = false; selectedVote = null;
-  document.getElementById("gameContent").innerHTML = `
-    <div class="loading-screen">
-      <div class="icon">⚠️</div>
-      <div class="title">Could not get verdict</div>
-      <div class="status-msg">GenLayer might be slow. Tap below to try again.</div>
-      <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
-    </div>`;
 }
 
 function startTimer() {
