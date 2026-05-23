@@ -245,7 +245,6 @@ let username = localStorage.getItem("foc_username") || "";
 let selectedVote = null;
 let txPending = false;
 let currentRoomId = null;
-let lastShownVerdict = -1;
 
 async function glRead(method, args = []) {
   for (let i = 0; i < 80; i++) {
@@ -409,27 +408,15 @@ async function pollLobby(roomId) {
 async function startGame(roomId) {
   try {
     txPending = true;
-    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game...</div><div class="status-msg pulse">Please wait</div></div>';
+    document.getElementById("lobbyPlayers").innerHTML = '<div class="loading-screen"><div class="icon">🚀</div><div class="title">Starting game on GenLayer...</div><div class="status-msg pulse">Please wait</div></div>';
     document.getElementById("lobbyStartBtn").innerHTML = "";
     await glWrite("start_game", [roomId, walletAddress]);
-    txPending = false;
-    showToast("Game started!", "success");
-    if (!pollInterval) {
-      pollInterval = setInterval(() => pollLobby(roomId), 3000);
-    }
-    pollLobby(roomId);
-  } catch(e) {
-    txPending = false;
-    showToast("Failed to start", "error");
-    console.error(e);
-  }
+    txPending = false; showToast("Game started!", "success");
+  } catch(e) { txPending = false; showToast("Failed to start", "error"); console.error(e); }
 }
 
 async function goToGame(roomId) {
-  currentRoomId = roomId;
-  txPending = false;
-  lastShownVerdict = -1;
-  showScreen("gameScreen");
+  currentRoomId = roomId; showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
   pollGame(roomId);
 }
@@ -445,31 +432,6 @@ async function pollGame(roomId) {
     const room = JSON.parse(raw);
     if (room.error) return;
     if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
-
-    // Show any verdict missed because game advanced before we polled
-    if (room.current_round > 1) {
-      const prevIdx = room.current_round - 2;
-      const prevRound = room.rounds[prevIdx];
-      if (prevRound && prevRound.is_resolved && lastShownVerdict < prevIdx) {
-        lastShownVerdict = prevIdx;
-        const el = document.getElementById("gameContent");
-        el.innerHTML = `
-          <div class="round-badge">Round ${prevRound.round_num} / ${room.total_rounds} — Verdict</div>
-          <div class="claim-box"><div class="claim-text">"${prevRound.claim}"</div></div>
-          <div class="verdict-box ${prevRound.verdict?"true":"false"}">
-            <div class="verdict-label">${prevRound.verdict ? "✅ FACT" : "❌ CAP"}</div>
-            <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${prevRound.reasoning || "No reasoning available"}</div>
-          </div>
-          <div class="status-msg pulse">Next round starting in a moment...</div>`;
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-        setTimeout(() => {
-          if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-          pollGame(roomId);
-        }, 10000);
-        return;
-      }
-    }
-
     if (!txPending) renderGame(room);
   } catch(e) { console.error("Game poll:", e); }
 }
@@ -482,7 +444,6 @@ function renderGame(room) {
   const el = document.getElementById("gameContent");
 
   if (rnd.is_resolved) {
-    lastShownVerdict = room.current_round - 1;
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Verdict</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
@@ -492,11 +453,8 @@ function renderGame(room) {
       </div>
       ${room.current_round < room.total_rounds ? `<div class="status-msg pulse">Next round starting in a moment...</div>` : `<div class="status-msg pulse">Game finishing...</div>`}`;
     txPending = false; selectedVote = null;
-    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    setTimeout(() => {
-      if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-      pollGame(room.id);
-    }, 12000);
+    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+    setTimeout(() => { pollGame(room.id); }, 12000);
     return;
   }
 
@@ -577,7 +535,7 @@ function cancelVote() {
   if (factBtn) { factBtn.style.opacity = "1"; factBtn.classList.remove("selected"); }
   if (capBtn) { capBtn.style.opacity = "1"; capBtn.classList.remove("selected"); }
   if (confirmArea) confirmArea.style.display = "none";
-  if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+  if (currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
 }
 
 function getDisplayName(addr) {
@@ -607,17 +565,8 @@ async function submitClaim(roomId) {
     txPending = true;
     document.getElementById("gameContent").innerHTML = `<div class="loading-screen"><div class="icon">📝</div><div class="title">Submitting your claim...</div><div class="status-msg pulse">Sending to GenLayer blockchain</div></div>`;
     await glWrite("submit_claim", [roomId, walletAddress, claim]);
-    txPending = false;
-    showToast("Claim submitted!", "success");
-    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-    pollGame(roomId);
-  } catch(e) {
-    txPending = false;
-    showToast("Failed", "error");
-    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-    pollGame(roomId);
-    console.error(e);
-  }
+    txPending = false; showToast("Claim submitted!", "success"); pollGame(roomId);
+  } catch(e) { txPending = false; showToast("Failed", "error"); pollGame(roomId); console.error(e); }
 }
 
 async function castVote(roomId, isFact) {
@@ -630,6 +579,7 @@ async function castVote(roomId, isFact) {
   } catch(e) { txPending = false; showToast("Failed", "error"); pollGame(roomId); console.error(e); }
 }
 
+// ─── Resolve Round (FIXED) ────────────────────────────────────────────────────
 async function waitForResolved(roomId, roundIndex, timeoutMs = 60000, intervalMs = 2000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -702,6 +652,49 @@ async function resolveRound(roomId) {
     }
     console.error(e);
   }
+}
+
+async function resolveRound(roomId) {
+  txPending = true;
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  document.getElementById("gameContent").innerHTML = `
+    <div class="loading-screen">
+      <div class="icon">⚖️</div>
+      <div class="title">AI Validators are deciding...</div>
+      <div class="status-msg pulse">Resolving on GenLayer blockchain</div>
+      <div class="subtitle">This may take 15-30 seconds</div>
+    </div>`;
+  try {
+    await glWrite("resolve_round", [roomId]);
+    txPending = false;
+    showToast("Verdict revealed!", "success", true);
+    const room = await waitForResolved(roomId, 15000, 1500);
+    if (room) {
+      renderGame(room);
+      setTimeout(() => {
+        if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+      }, 10000);
+    } else {
+      showToast("Taking longer than expected...", "error");
+      pollGame(roomId);
+    }
+  } catch(e) {
+    txPending = false; selectedVote = null;
+    showToast("Failed — tap again to retry", "error");
+    pollGame(roomId); console.error(e);
+  }
+}
+
+// ─── Timer ────────────────────────────────────────────────────────────────────
+function startTimer() {
+  timerSeconds = 30;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    const el = document.getElementById("timerDisplay");
+    if (el) { el.textContent = timerSeconds; el.className = "timer-num"+(timerSeconds<=10?" urgent":""); }
+    if (timerSeconds <= 0) { clearInterval(timerInterval); timerInterval = null; }
+  }, 1000);
 }
 
 async function showResults(room) {
