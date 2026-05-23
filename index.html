@@ -534,14 +534,17 @@ function selectVote(isFact) {
 }
 
 function cancelVote() {
-  txPending = false; selectedVote = null;
+  txPending = false;
+  selectedVote = null;
   const factBtn = document.getElementById("voteFactBtn");
   const capBtn = document.getElementById("voteCapBtn");
   const confirmArea = document.getElementById("voteConfirmArea");
   if (factBtn) { factBtn.style.opacity = "1"; factBtn.classList.remove("selected"); }
   if (capBtn) { capBtn.style.opacity = "1"; capBtn.classList.remove("selected"); }
   if (confirmArea) confirmArea.style.display = "none";
-  if (currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+  if (!pollInterval && currentRoomId) {
+    pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+  }
 }
 
 function getDisplayName(addr) {
@@ -582,14 +585,27 @@ async function submitClaim(roomId) {
 
 async function castVote(roomId, isFact) {
   try {
-    txPending = true; showToast(isFact ? "Voting FACT..." : "Voting CAP...");
+    txPending = true;
+    showToast(isFact ? "Voting FACT..." : "Voting CAP...");
     await glWrite("vote", [roomId, walletAddress, isFact]);
-    txPending = false; selectedVote = null; showToast("Vote submitted!", "success");
-    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+    txPending = false;
+    selectedVote = null;
+    showToast("Vote submitted!", "success");
+    if (!pollInterval && currentRoomId) {
+      pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+    }
     pollGame(roomId);
-  } catch(e) { txPending = false; showToast("Failed", "error"); pollGame(roomId); console.error(e); }
+  } catch(e) {
+    txPending = false;
+    selectedVote = null;
+    showToast("Failed", "error");
+    if (!pollInterval && currentRoomId) {
+      pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+    }
+    pollGame(roomId);
+    console.error(e);
+  }
 }
-
 // ─── Resolve Round (FIXED) ────────────────────────────────────────────────────
 async function waitForResolved(roomId, roundIndex, timeoutMs = 60000, intervalMs = 2000) {
   const deadline = Date.now() + timeoutMs;
