@@ -438,7 +438,8 @@ async function pollGame(roomId) {
     const raw = await glRead("get_room", [roomId]);
     const room = JSON.parse(raw);
     if (room.error) return;
-    if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
+
+    // Check missed verdict BEFORE checking game_finished
     if (room.current_round > 1) {
       const prevIdx = room.current_round - 2;
       const prevRound = room.rounds[prevIdx];
@@ -452,15 +453,18 @@ async function pollGame(roomId) {
             <div class="verdict-label">${prevRound.verdict ? "✅ FACT" : "❌ CAP"}</div>
             <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${prevRound.reasoning || "No reasoning available"}</div>
           </div>
-          <div class="status-msg pulse">Next round starting in a moment...</div>`;
+          <div class="status-msg pulse">${room.game_finished ? "Game finishing..." : "Next round starting in a moment..."}</div>`;
         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
         setTimeout(() => {
+          if (room.game_finished) { showResults(room); return; }
           if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
           pollGame(roomId);
         }, 10000);
         return;
       }
     }
+
+    if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
     if (!txPending) renderGame(room);
   } catch(e) { console.error("Game poll:", e); }
 }
