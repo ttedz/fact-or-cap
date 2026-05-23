@@ -437,14 +437,7 @@ async function pollGame(roomId) {
   } catch(e) { console.error("Game poll:", e); }
 }
 
-function renderGame(room) {
-  const rnd = room.rounds[room.current_round - 1] || room.rounds[room.rounds.length - 1];
-  if (!rnd) return;
-  const isClaimer = rnd.claimer?.toLowerCase() === walletAddress?.toLowerCase();
-  const hasVoted = walletAddress && rnd.votes && rnd.votes[walletAddress] !== undefined;
-  const el = document.getElementById("gameContent");
-
-  if (rnd.is_resolved) {
+if (rnd.is_resolved) {
     el.innerHTML = `
       <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Verdict</div>
       <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
@@ -453,9 +446,16 @@ function renderGame(room) {
         <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${rnd.reasoning || "No reasoning available"}</div>
       </div>
       ${room.current_round < room.total_rounds ? `<div class="status-msg pulse">Next round starting in a moment...</div>` : `<div class="status-msg pulse">Game finishing...</div>`}`;
-    txPending = false; selectedVote = null;
-    if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-    setTimeout(() => { pollGame(room.id); }, 12000);
+    txPending = false;
+    selectedVote = null;
+    // Stop polling so verdict stays visible
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    setTimeout(() => {
+      if (!pollInterval && currentRoomId) {
+        pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+      }
+      pollGame(room.id);
+    }, 12000);
     return;
   }
 
