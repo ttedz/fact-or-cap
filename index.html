@@ -245,6 +245,7 @@ let username = localStorage.getItem("foc_username") || "";
 let selectedVote = null;
 let txPending = false;
 let currentRoomId = null;
+let lastShownVerdict = -1;
 
 async function glRead(method, args = []) {
   for (let i = 0; i < 80; i++) {
@@ -418,10 +419,12 @@ async function startGame(roomId) {
 async function goToGame(roomId) {
   currentRoomId = roomId;
   txPending = false;
+  lastShownVerdict = -1; 
   showScreen("gameScreen");
   pollInterval = setInterval(() => pollGame(roomId), 3000);
   pollGame(roomId);
 }
+  
 async function pollGame(roomId) {
   if (txPending) return;
   const claimInput = document.getElementById("claimInput");
@@ -433,82 +436,33 @@ async function pollGame(roomId) {
     const room = JSON.parse(raw);
     if (room.error) return;
     if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
+
+    // Catch any verdict we missed before game advanced to next round
+    if (room.current_round > 1) {
+      const prevIdx = room.current_round - 2;
+      const prevRound = room.rounds[prevIdx];
+      if (prevRound && prevRound.is_resolved && lastShownVerdict < prevIdx) {
+        lastShownVerdict = prevIdx;
+        const el = document.getElementById("gameContent");
+        el.innerHTML = `
+          <div class="round-badge">Round ${prevRound.round_num} / ${room.total_rounds} — Verdict</div>
+          <div class="claim-box"><div class="claim-text">"${prevRound.claim}"</div></div>
+          <div class="verdict-box ${prevRound.verdict?"true":"false"}">
+            <div class="verdict-label">${prevRound.verdict ? "✅ FACT" : "❌ CAP"}</div>
+            <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${prevRound.reasoning || "No reasoning available"}</div>
+          </div>
+          <div class="status-msg pulse">Next round starting in a moment...</div>`;
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        setTimeout(() => {
+          if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+          pollGame(roomId);
+        }, 10000);
+        return;
+      }
+    }
+
     if (!txPending) renderGame(room);
   } catch(e) { console.error("Game poll:", e); }
-}
-
-if (rnd.is_resolved) {
-    el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Verdict</div>
-      <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      <div class="verdict-box ${rnd.verdict?"true":"false"}">
-        <div class="verdict-label">${rnd.verdict ? "✅ FACT" : "❌ CAP"}</div>
-        <div class="verdict-reasoning" style="color:#e2d9f3;font-size:14px;margin-top:12px;font-style:italic">${rnd.reasoning || "No reasoning available"}</div>
-      </div>
-      ${room.current_round < room.total_rounds ? `<div class="status-msg pulse">Next round starting in a moment...</div>` : `<div class="status-msg pulse">Game finishing...</div>`}`;
-    txPending = false;
-    selectedVote = null;
-    // Stop polling so verdict stays visible
-    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    setTimeout(() => {
-      if (!pollInterval && currentRoomId) {
-        pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-      }
-      pollGame(room.id);
-    }, 12000);
-    return;
-  }
-
-  if (!rnd.claim_submitted) {
-    el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Claim Phase</div>
-      ${isClaimer ? `
-        <div class="status-msg" style="color:var(--accent2);font-weight:600;margin-bottom:16px">🎤 Your turn — submit a claim!</div>
-        <div class="form-group"><input type="text" id="claimInput" placeholder="e.g. Sharks are older than trees..." style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:16px"/></div>
-        <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitClaim('${room.id}')">Submit Claim</button>
-      ` : `
-        <div style="text-align:center;padding:40px 20px">
-          <div style="font-size:48px;margin-bottom:12px">⏳</div>
-          <div style="font-size:18px;font-weight:600;margin-bottom:8px">${shortAddr(rnd.claimer)} is writing a claim...</div>
-          <div style="color:var(--muted);font-size:14px">Once they submit, you'll have 30 seconds to vote</div>
-        </div>`}`;
-    return;
-  }
-
-  if (!rnd.voting_open && !rnd.is_resolved) {
-    el.innerHTML = `<div class="loading-screen"><div class="icon">🤖</div><div class="title">AI Validators are deciding...</div><div class="status-msg pulse">GenLayer validators are browsing, reasoning and reaching consensus</div><div class="subtitle">This may take 15-30 seconds</div></div>`;
-    return;
-  }
-
-  if (rnd.voting_open) {
-    if (!timerInterval && !hasVoted && !isClaimer) startTimer();
-    const nonClaimers = room.players.filter(p => p.toLowerCase() !== rnd.claimer?.toLowerCase()).length;
-    const votesIn = Object.keys(rnd.votes || {}).length;
-    const allVoted = votesIn >= nonClaimers;
-    el.innerHTML = `
-      <div class="round-badge">Round ${rnd.round_num} / ${room.total_rounds} — Vote!</div>
-      <div class="claim-box"><div class="claim-text">"${rnd.claim}"</div></div>
-      ${(hasVoted || isClaimer) ? `
-        ${allVoted
-          ? `<div class="status-msg" style="color:var(--green);font-size:18px;font-weight:700">✅ All players voted!</div>
-             ${isClaimer ? `<button class="btn btn-primary btn-lg" style="margin-top:16px;width:100%" onclick="resolveRound('${room.id}')">🤖 Ask AI for Verdict</button>` : `<div class="status-msg pulse">⏳ Waiting for ${shortAddr(rnd.claimer)} to reveal verdict...</div>`}`
-          : `<div class="status-msg pulse">${isClaimer ? "⏳ Waiting for others to vote... (" + votesIn + "/" + nonClaimers + ")" : "✅ Vote submitted! Waiting for others... (" + votesIn + "/" + nonClaimers + ")"}</div>
-             <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:8px">AI verdict will be available when all players vote</div>`}
-      ` : `
-        <div class="timer-num ${timerSeconds<=10?"urgent":""}" id="timerDisplay">${timerSeconds}</div>
-        <p style="text-align:center;color:var(--muted);margin-bottom:16px">Is this TRUE or FALSE?</p>
-        <div id="voteSelection">
-          <div class="vote-btns">
-            <button class="vote-btn fact" id="voteFactBtn" onclick="selectVote(true)">✅ FACT</button>
-            <button class="vote-btn cap" id="voteCapBtn" onclick="selectVote(false)">❌ CAP</button>
-          </div>
-          <div id="voteConfirmArea" style="display:none;margin-top:16px;text-align:center">
-            <div id="voteSelectedLabel" style="font-size:18px;font-weight:700;margin-bottom:12px"></div>
-            <button class="btn btn-primary btn-lg" style="width:100%" onclick="confirmVote('${room.id}')">Confirm Vote</button>
-            <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="cancelVote()">← Change my mind</button>
-          </div>
-        </div>`}`;
-  }
 }
 
 function selectVote(isFact) {
