@@ -638,46 +638,49 @@ async function resolveRound(roomId) {
     roundIndex = JSON.parse(raw).current_round - 1;
   } catch(e) {}
 
-  const MAX_RETRIES = 3;
-  let attempt = 0;
+  document.getElementById("gameContent").innerHTML = `
+    <div class="loading-screen">
+      <div class="icon">⚖️</div>
+      <div class="title">AI Validators are deciding...</div>
+      <div class="status-msg pulse">Resolving on GenLayer blockchain</div>
+      <div class="subtitle">This may take 15-30 seconds</div>
+    </div>`;
 
-  const showLoading = (msg) => {
+  try {
+    await glWrite("resolve_round", [roomId]);
+    txPending = false;
+    showToast("Verdict revealed!", "success", true);
+    const result = await waitForResolved(roomId, roundIndex, 60000, 2000);
+    if (result) {
+      lastShownVerdict = roundIndex;
+      const fakeRoom = { ...result.room, current_round: roundIndex + 1 };
+      renderGame(fakeRoom);
+      setTimeout(() => {
+        if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+      }, 10000);
+    } else {
+      // Timed out — let user decide to retry
+      txPending = false;
+      document.getElementById("gameContent").innerHTML = `
+        <div class="loading-screen">
+          <div class="icon">⚠️</div>
+          <div class="title">Taking too long...</div>
+          <div class="status-msg">GenLayer might be slow. Try again when ready.</div>
+          <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
+        </div>`;
+    }
+  } catch(e) {
+    txPending = false; selectedVote = null;
     document.getElementById("gameContent").innerHTML = `
       <div class="loading-screen">
-        <div class="icon">⚖️</div>
-        <div class="title">AI Validators are deciding...</div>
-        <div class="status-msg pulse">${msg}</div>
-        <div class="subtitle">This may take 15-30 seconds</div>
+        <div class="icon">⚠️</div>
+        <div class="title">Failed</div>
+        <div class="status-msg">Something went wrong. Try again when ready.</div>
+        <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
       </div>`;
-  };
-
-  while (attempt < MAX_RETRIES) {
-    attempt++;
-    showLoading(attempt > 1 ? `Attempt ${attempt}/${MAX_RETRIES} — retrying...` : "Resolving on GenLayer blockchain");
-    try {
-      await glWrite("resolve_round", [roomId]);
-      txPending = false;
-      showToast("Verdict revealed!", "success", true);
-      const result = await waitForResolved(roomId, roundIndex, 60000, 2000);
-      if (result) {
-        lastShownVerdict = roundIndex;
-        const fakeRoom = { ...result.room, current_round: roundIndex + 1 };
-        renderGame(fakeRoom);
-        setTimeout(() => {
-          if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
-        }, 10000);
-        return;
-      } else {
-        showToast(`Attempt ${attempt} timed out, retrying...`, "error");
-      }
-    } catch(e) {
-      console.error(`resolveRound attempt ${attempt} failed:`, e);
-      if (attempt < MAX_RETRIES) {
-        showToast(`Failed — retrying (${attempt}/${MAX_RETRIES})...`, "error");
-        await new Promise(r => setTimeout(r, 2000));
-      }
-    }
+    console.error(e);
   }
+}
 
   txPending = false; selectedVote = null;
   document.getElementById("gameContent").innerHTML = `
