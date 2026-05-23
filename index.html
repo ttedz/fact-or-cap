@@ -668,18 +668,27 @@ async function resolveRound(roomId) {
           <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
         </div>`;
     }
-  } catch(e) {
+} catch(e) {
     txPending = false;
-    const result = await
-function startTimer() {
-  timerSeconds = 30;
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timerSeconds--;
-    const el = document.getElementById("timerDisplay");
-    if (el) { el.textContent = timerSeconds; el.className = "timer-num"+(timerSeconds<=10?" urgent":""); }
-    if (timerSeconds <= 0) { clearInterval(timerInterval); timerInterval = null; }
-  }, 1000);
+    const result = await waitForResolved(roomId, roundIndex, 10000, 2000);
+    if (result) {
+      lastShownVerdict = roundIndex;
+      const fakeRoom = { ...result.room, current_round: roundIndex + 1 };
+      renderGame(fakeRoom);
+      setTimeout(() => {
+        if (!pollInterval && currentRoomId) pollInterval = setInterval(() => pollGame(currentRoomId), 3000);
+      }, 10000);
+    } else {
+      document.getElementById("gameContent").innerHTML = `
+        <div class="loading-screen">
+          <div class="icon">⚠️</div>
+          <div class="title">Failed</div>
+          <div class="status-msg">Something went wrong. Try again when ready.</div>
+          <button class="btn btn-primary btn-lg" style="margin-top:24px" onclick="resolveRound('${roomId}')">🔁 Try Again</button>
+        </div>`;
+    }
+    console.error(e);
+  }
 }
 
 async function showResults(room) {
