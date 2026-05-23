@@ -428,7 +428,7 @@ async function goToGame(roomId) {
   pollGame(roomId);
 }
 
-async function pollGame(roomId) {
+  async function pollGame(roomId) {
   if (txPending) return;
   const claimInput = document.getElementById("claimInput");
   if (claimInput && document.activeElement === claimInput) return;
@@ -439,7 +439,6 @@ async function pollGame(roomId) {
     const room = JSON.parse(raw);
     if (room.error) return;
 
-    // Check ALL rounds for unshown verdicts before anything else
     for (let i = 0; i < room.rounds.length; i++) {
       const rnd = room.rounds[i];
       if (rnd && rnd.is_resolved && lastShownVerdict < i) {
@@ -462,11 +461,6 @@ async function pollGame(roomId) {
         return;
       }
     }
-
-    if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
-    if (!txPending) renderGame(room);
-  } catch(e) { console.error("Game poll:", e); }
-}
 
     if (room.game_finished) { clearInterval(pollInterval); pollInterval = null; showResults(room); return; }
     if (!txPending) renderGame(room);
